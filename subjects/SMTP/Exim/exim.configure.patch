@@ -1,0 +1,47 @@
+--- configure	2020-03-31 12:41:46.040047772 +1100
++++ exim/configure	2020-03-31 12:39:54.935685671 +1100
+@@ -359,7 +359,6 @@
+   # testing for an empty sending host field.
+ 
+   accept  hosts = :
+-          control = dkim_disable_verify
+ 
+   #############################################################################
+   # The following section of the ACL is concerned with local parts that contain
+@@ -438,7 +437,6 @@
+ 
+   accept  hosts         = +relay_from_hosts
+           control       = submission
+-          control       = dkim_disable_verify
+ 
+   # Accept if the message arrived over an authenticated connection, from
+   # any host. Again, these messages are usually from MUAs, so recipient
+@@ -447,7 +445,6 @@
+ 
+   accept  authenticated = *
+           control       = submission
+-          control       = dkim_disable_verify
+ 
+   # Insist that a HELO/EHLO was accepted.
+ 
+@@ -577,14 +574,14 @@
+ # If the DNS lookup fails, no further routers are tried because of the no_more
+ # setting, and consequently the address is unrouteable.
+ 
+-dnslookup:
+-  driver = dnslookup
+-  domains = ! +local_domains
+-  transport = remote_smtp
+-  ignore_target_hosts = 0.0.0.0 : 127.0.0.0/8
++#dnslookup:
++#  driver = dnslookup
++#  domains = ! +local_domains
++#  transport = remote_smtp
++#  ignore_target_hosts = 0.0.0.0 : 127.0.0.0/8
+ # if ipv6-enabled then instead use:
+ # ignore_target_hosts = <; 0.0.0.0 ; 127.0.0.0/8 ; ::1
+-  no_more
++#  no_more
+ 
+ 
+ # This alternative router can be used when you want to send all mail to a

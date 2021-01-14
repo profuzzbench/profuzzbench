@@ -1,0 +1,7 @@
+USER ubuntu
+PASS ubuntu
+PASV
+LIST
+STAT
+QUIT
+

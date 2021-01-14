@@ -1,0 +1,5 @@
+USER ubuntu
+PASS ubuntu
+RETR test.txt
+QUIT
+

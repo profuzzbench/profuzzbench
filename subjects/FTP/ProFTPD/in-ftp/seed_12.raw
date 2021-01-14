@@ -1,0 +1,13 @@
+USER ubuntu
+PASS ubuntu
+RNFR test.txt
+RNTO test2.txt
+LIST
+RNFR test2.txt
+RNTO test.txt
+LIST
+STAT
+RNFR test2.txt
+RNTO test.txt
+QUIT
+

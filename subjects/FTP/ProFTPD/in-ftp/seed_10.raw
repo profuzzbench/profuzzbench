@@ -1,0 +1,12 @@
+USER ubuntu
+PASS ubuntu
+TYPE A
+SIZE test.txt
+TYPE E
+SIZE test.txt
+TYPE I
+SIZE test.txt
+TYPE L 7
+SIZE test.txt
+QUIT
+
