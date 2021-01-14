@@ -1,4 +1,4 @@
-# ProFuzzBench - A Protocol Fuzzing Benchmark
+# ProFuzzBench - A Benchmark for Stateful Protocol Fuzzing
 ProFuzzBench is a benchmark for stateful fuzzing of network protocols. It includes a suite of representative open-source network servers for popular protocols (e.g., TLS, SSH, SMTP, FTP, SIP), and tools to automate experimentation.
 
 # Citing ProFuzzBench
