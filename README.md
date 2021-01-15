@@ -43,8 +43,8 @@ Follow the steps below to run and collect experimental results for LightFTP, whi
 
 ## Step-0. Set up environmental variables
 ```
-git clone https://github.com/thuanpv/protocol-fuzzing-benchmark.git
-cd protocol-fuzzing-benchmark
+git clone https://github.com/profuzzbench/profuzzbench.git
+cd profuzzbench
 export PFBENCH=$(pwd)
 export PATH=$PATH:$PFBENCH/scripts/execution:$PFBENCH/scripts/analysis
 ```
