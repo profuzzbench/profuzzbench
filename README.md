@@ -38,7 +38,7 @@ protocol-fuzzing-benchmark
 ```
 
 
-# Tutorial - Fuzzing LightFTP server with AFLNet and AFLnwe, which is a network-enabled version of AFL
+# Tutorial - Fuzzing LightFTP server with [AFLNet](https://github.com/aflnet/aflnet) and [AFLnwe](https://github.com/aflnet/aflnwe), a network-enabled version of AFL
 Follow the steps below to run and collect experimental results for LightFTP, which is a lightweight File Transfer Protocol (FTP) server. The similar steps should be followed to run experiments on other subjects. Each subject program comes with a README.md file showing subject-specific commands to run experiments.
 
 ## Step-0. Set up environmental variables
