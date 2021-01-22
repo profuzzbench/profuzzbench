@@ -30,9 +30,7 @@ if $(strstr $FUZZER "afl"); then
   if [ $FUZZER = "aflnwe" ]; then
     cov_script ${WORKDIR}/dnsmasq/src/${OUTDIR}/ 5353 ${SKIPCOUNT} ${WORKDIR}/dnsmasq/src/${OUTDIR}/cov_over_time.csv 0
   else
-    #As Dnsmasq is a kind-of stateless server, we use the test cases stored in queue folder and afl-replay instead of aflnet-replay
-    #to calculate code coverage
-    cov_script ${WORKDIR}/dnsmasq/src/${OUTDIR}/ 5353 ${SKIPCOUNT} ${WORKDIR}/dnsmasq/src/${OUTDIR}/cov_over_time.csv 0
+    cov_script ${WORKDIR}/dnsmasq/src/${OUTDIR}/ 5353 ${SKIPCOUNT} ${WORKDIR}/dnsmasq/src/${OUTDIR}/cov_over_time.csv 1
   fi
 
   gcovr -r . --html --html-details -o index.html
