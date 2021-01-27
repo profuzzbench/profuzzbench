@@ -37,7 +37,7 @@ for f in $(echo $folder/$testdir/*.raw); do
   pkill proftpd
 
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
+  timeout -k 0 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
   
   wait
   cov_data=$(gcovr -r . -s | grep "[lb][a-z]*:")
@@ -58,7 +58,7 @@ for f in $(echo $folder/$testdir/id*); do
   pkill proftpd
   
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
+  timeout -k 0 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
 
   wait
   count=$(expr $count + 1)
