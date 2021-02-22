@@ -1,0 +1,15 @@
+Common subdirectories: bftpd/debian and bftpd-patch/debian
+Common subdirectories: bftpd/doc and bftpd-patch/doc
+diff -u bftpd/main.c bftpd-patch/main.c
+--- bftpd/main.c	2019-07-29 22:29:25.000000000 +0800
++++ bftpd-patch/main.c	2021-02-21 15:23:37.761751946 +0800
+@@ -290,7 +290,7 @@
+ 			 * we have to check if accept() returned an error.
+ 			 */
+ 			if (sock > 0) {
+-				pid = fork();
++				pid = 0;
+ 				if (!pid) {       /* child */
+ 					close(0);
+ 					close(1);
+Common subdirectories: bftpd/redhat and bftpd-patch/redhat

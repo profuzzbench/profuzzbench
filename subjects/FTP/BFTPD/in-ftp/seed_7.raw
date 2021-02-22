@@ -1,0 +1,5 @@
+USER ubuntu
+PASS ubuntu
+DELE test.txt
+QUIT
+

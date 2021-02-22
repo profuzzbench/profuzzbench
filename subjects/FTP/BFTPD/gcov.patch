@@ -1,0 +1,58 @@
+Common subdirectories: bftpd-gcov/debian and bftpd-patch/debian
+Common subdirectories: bftpd-gcov/doc and bftpd-patch/doc
+diff -u bftpd-gcov/login.c bftpd-patch/login.c
+--- bftpd-gcov/login.c	2019-04-26 08:35:17.000000000 +0800
++++ bftpd-patch/login.c	2021-02-21 23:03:11.436612501 +0800
+@@ -384,7 +384,8 @@
+ 					strerror(errno));
+ 			exit(0);
+ 		}
+-		if (bftpd_setuid(userinfo.pw_uid)) {
++        unsetenv("GCOV_PREFIX");
++        if (bftpd_setuid(userinfo.pw_uid)) {
+ 			control_printf(SL_FAILURE, "421 Unable to change uid.\r\n");
+ 			exit(0);
+ 		}
+@@ -426,6 +427,7 @@
+                  control_printf(SL_FAILURE, "421 Unable to change root directory.\r\n");
+                  exit(0);
+              }
++             unsetenv("GCOV_PREFIX");
+              if ( chdir("/") )
+              {
+                  control_printf(SL_FAILURE, "421 Unable to change working directory.\r\n");
+@@ -451,6 +453,7 @@
+                     control_printf(SL_FAILURE, "421 Unable to change root directory.\r\n");
+                     exit(0);
+                 }
++                unsetenv("GCOV_PREFIX");
+                 if ( chdir("/") )
+                 {
+                     control_printf(SL_FAILURE, "421 Unable to change working directory.\r\n");
+diff -u bftpd-gcov/main.c bftpd-patch/main.c
+--- bftpd-gcov/main.c	2019-07-29 22:29:25.000000000 +0800
++++ bftpd-patch/main.c	2021-02-21 15:23:37.761751946 +0800
+@@ -290,7 +290,7 @@
+ 			 * we have to check if accept() returned an error.
+ 			 */
+ 			if (sock > 0) {
+-				pid = fork();
++				pid = 0;
+ 				if (!pid) {       /* child */
+ 					close(0);
+ 					close(1);
+diff -u bftpd-gcov/Makefile bftpd-patch/Makefile
+--- bftpd-gcov/Makefile	2021-01-11 04:27:08.000000000 +0800
++++ bftpd-patch/Makefile	2021-02-21 17:08:41.276221204 +0800
+@@ -3,8 +3,8 @@
+ CC?=gcc
+ INSTALL=/usr/bin/install -c
+ prefix=/usr
+-CFLAGS=-g -O2 -DHAVE_CONFIG_H -Wall -I. -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DPREFIX=\"$(prefix)\" 
+-LIBS= -lcrypt
++CFLAGS=-g -O2 -DHAVE_CONFIG_H -Wall -I. -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DPREFIX=\"$(prefix)\" -fprofile-arcs -ftest-coverage
++LIBS= -lcrypt -lgcov
+ mandir=${prefix}/man
+ sbindir=${exec_prefix}/sbin
+ DESTDIR=
+Common subdirectories: bftpd-gcov/redhat and bftpd-patch/redhat
