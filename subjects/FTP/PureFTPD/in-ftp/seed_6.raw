@@ -1,0 +1,5 @@
+USER fuzzing
+PASS fuzzing
+RETR test.txt
+QUIT
+

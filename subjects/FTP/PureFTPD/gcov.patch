@@ -1,0 +1,30 @@
+diff --git a/src/ftpd.c b/src/ftpd.c
+index 60b95b6..a4d7c57 100644
+--- a/src/ftpd.c
++++ b/src/ftpd.c
+@@ -299,7 +299,7 @@ void _EXIT(const int status)
+ #ifdef FTPWHO
+     ftpwho_exit();
+ #endif
+-    _exit(status);
++    exit(status);
+ }
+ 
+ static char replybuf[MAX_SERVER_REPLY_LEN * 4U];
+@@ -1927,6 +1927,7 @@ void dopass(char *password)
+     } else {
+         addreply(230, MSG_CURRENT_DIR_IS, wd);
+     }
++    unsetenv("GCOV_PREFIX");
+ 
+ #ifndef NON_ROOT_FTP
+     disablesignals();
+@@ -5278,7 +5279,7 @@ static void accept_client(const int active_listen_fd) {
+     sigaddset(&set, SIGCHLD);
+     sigprocmask(SIG_BLOCK, &set, NULL);
+     nb_children++;
+-    child = fork();
++    child = 0;
+     if (child == (pid_t) 0) {
+         if (isatty(2)) {
+             (void) close(2);
