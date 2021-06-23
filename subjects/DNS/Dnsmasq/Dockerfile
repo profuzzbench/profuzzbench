@@ -59,6 +59,7 @@ RUN cd $WORKDIR && \
     git clone git://thekelleys.org.uk/dnsmasq.git && \
     cd dnsmasq && \
     git checkout v2.73rc6 && \
+    patch -p1 < ${WORKDIR}/dnsmasq.patch && \
     CC=afl-clang-fast make && \
     cp ${WORKDIR}/dnsmasq.conf /etc/ && \
     echo address=/test.com/5.5.5.5 | sudo tee -a /etc/dnsmasq.conf
@@ -68,4 +69,5 @@ RUN cd $WORKDIR && \
     git clone git://thekelleys.org.uk/dnsmasq.git dnsmasq-gcov && \
     cd dnsmasq-gcov && \
     git checkout v2.73rc6 && \
+    patch -p1 < ${WORKDIR}/dnsmasq.patch && \
     make CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage"
