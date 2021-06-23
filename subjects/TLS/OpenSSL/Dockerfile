@@ -23,6 +23,9 @@ RUN groupadd ubuntu && \
 USER ubuntu
 WORKDIR /home/ubuntu
 
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
 # Download and compile AFLNet
 ENV LLVM_CONFIG="llvm-config-3.8"
 
@@ -30,12 +33,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
@@ -67,7 +70,7 @@ RUN cd ${WORKDIR} && \
     CC=afl-clang-fast make include/openssl/opensslv.h && \
     CC=afl-clang-fast make include/crypto/bn_conf.h && \
     CC=afl-clang-fast make include/crypto/dso_conf.h && \
-    CC=afl-clang-fast make apps/openssl
+    CC=afl-clang-fast make apps/openssl $MAKE_OPT
 
 # Download and compile OpenSSL for coverage analysis
 RUN cd ${WORKDIR} && \
@@ -80,4 +83,4 @@ RUN cd ${WORKDIR} && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/opensslv.h && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/bn_conf.h && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/dso_conf.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl $MAKE_OPT

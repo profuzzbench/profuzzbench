@@ -26,6 +26,9 @@ RUN groupadd ubuntu && \
 
 WORKDIR /home/ubuntu
 
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
 # Download and compile AFLNet
 ENV LLVM_CONFIG="llvm-config-3.8"
 
@@ -33,12 +36,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
@@ -67,7 +70,7 @@ RUN cd ${WORKDIR} && \
     git checkout 38903fb && \
     cd src; mkdir Local; cp src/EDITME Local/Makefile && \
     cd Local; patch -p1 < ${WORKDIR}/exim.patch; cd .. && \
-    make CC=afl-clang-fast clean all install
+    make CC=afl-clang-fast clean all install $MAKE_OPT
 
 # Configure exim
 RUN cd /usr/exim && \

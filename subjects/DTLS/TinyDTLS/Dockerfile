@@ -23,6 +23,9 @@ RUN groupadd ubuntu && \
 USER ubuntu
 WORKDIR /home/ubuntu
 
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
 # Download and compile AFLNet
 ENV LLVM_CONFIG="llvm-config-3.8"
 
@@ -30,12 +33,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
@@ -60,7 +63,9 @@ RUN cd $WORKDIR && \
     cd tinydtls && \
     git checkout 06995d4 && \
     cd tests && \
-    CC=afl-clang-fast make clean all
+    CC=afl-clang-fast make clean && \
+    CC=afl-clang-fast make ../libtinydtls.a $MAKE_OPT && \
+    CC=afl-clang-fast make $MAKE_OPT
 
 # Download and compile TinyDTLS for coverage analysis
 RUN cd $WORKDIR && \
@@ -69,4 +74,6 @@ RUN cd $WORKDIR && \
     git checkout 06995d4 && \
     patch -p1 < $WORKDIR/gcov.patch && \
     cd tests && \
-    cov=1 make clean all
+    cov=1 make clean && \
+    cov=1 make ../libtinydtls.a $MAKE_OPT && \
+    cov=1 make $MAKE_OPT

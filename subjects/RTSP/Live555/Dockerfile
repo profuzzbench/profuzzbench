@@ -23,6 +23,9 @@ RUN groupadd ubuntu && \
 USER ubuntu
 WORKDIR /home/ubuntu
 
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
 # Download and compile AFLNet
 ENV LLVM_CONFIG="llvm-config-3.8"
 
@@ -30,12 +33,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
     make clean all && \
-    cd llvm_mode && make
+    cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
@@ -65,7 +68,7 @@ RUN cd $WORKDIR && \
     git checkout ceeb4f4 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
     ./genMakefiles linux && \
-    make clean all
+    make clean all $MAKE_OPT
 
 # Set up Live555 for fuzzing
 RUN cd ${WORKDIR}/live555/testProgs && \
@@ -78,7 +81,7 @@ RUN cd $WORKDIR && \
     git checkout ceeb4f4 && \
     patch -p1 < $WORKDIR/gcov.patch && \
     ./genMakefiles linux && \
-    make CFLAGS="-fprofile-arcs -ftest-coverage" CPPFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" clean all
+    make CFLAGS="-fprofile-arcs -ftest-coverage" CPPFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" clean all $MAKE_OPT
 
 # Set up Live555 for coverage analysis
 RUN cd ${WORKDIR}/live555-cov/testProgs && \
