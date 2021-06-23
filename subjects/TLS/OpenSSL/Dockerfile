@@ -62,8 +62,12 @@ RUN cd ${WORKDIR} && \
     cd openssl && \
     cp ${WORKDIR}/*.pem ./ && \
     git checkout 0437435a && \
-    CC=afl-gcc ./config no-shared && \
-    CC=afl-gcc make
+    CC=afl-clang-fast ./config no-shared && \
+    CC=afl-clang-fast make include/openssl/configuration.h && \
+    CC=afl-clang-fast make include/openssl/opensslv.h && \
+    CC=afl-clang-fast make include/crypto/bn_conf.h && \
+    CC=afl-clang-fast make include/crypto/dso_conf.h && \
+    CC=afl-clang-fast make apps/openssl
 
 # Download and compile OpenSSL for coverage analysis
 RUN cd ${WORKDIR} && \
@@ -72,4 +76,8 @@ RUN cd ${WORKDIR} && \
     cp ${WORKDIR}/*.pem ./ && \
     git checkout 0437435a && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/configuration.h && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/opensslv.h && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/bn_conf.h && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/dso_conf.h && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl
