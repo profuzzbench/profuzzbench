@@ -16,7 +16,7 @@ if $(strstr $FUZZER "afl"); then
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR/dnsmasq/src
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dns -o $OUTDIR -N tcp://127.0.0.1/5353 $OPTIONS ./dnsmasq
+  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dns -o $OUTDIR -N udp://127.0.0.1/5353 $OPTIONS ./dnsmasq
   #Wait for the fuzzing process
   wait 
 
