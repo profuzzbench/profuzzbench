@@ -50,7 +50,7 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_NO_AFFINITY=1
 
 RUN mkdir $WORKDIR && \
-    pip install gcovr
+    pip install gcovr==4.2
 
 COPY --chown=ubuntu:ubuntu in-ssh ${WORKDIR}/in-ssh
 COPY --chown=ubuntu:ubuntu ssh.dict ${WORKDIR}/ssh.dict

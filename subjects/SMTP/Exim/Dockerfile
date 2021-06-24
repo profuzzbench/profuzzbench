@@ -53,7 +53,7 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_NO_AFFINITY=1
 
 RUN mkdir $WORKDIR && \
-    pip install gcovr
+    pip install gcovr==4.2
 
 COPY --chown=ubuntu:ubuntu in-smtp ${WORKDIR}/in-smtp
 COPY --chown=ubuntu:ubuntu smtp.dict ${WORKDIR}/smtp.dict

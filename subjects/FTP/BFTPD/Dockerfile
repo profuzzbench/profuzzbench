@@ -54,7 +54,7 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
 RUN mkdir $WORKDIR && \
     mkdir /home/ubuntu/ftpshare && \
     chown -R ubuntu:ubuntu /home/ubuntu/ftpshare && \
-    pip install gcovr
+    pip install gcovr==4.2
 
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
@@ -85,4 +85,4 @@ RUN cd ${WORKDIR}/bftpd-gcov && \
 USER root
 WORKDIR /home/ubuntu
 
-RUN pip install gcovr
+RUN pip install gcovr==4.2

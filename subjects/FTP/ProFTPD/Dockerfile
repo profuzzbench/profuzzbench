@@ -52,7 +52,7 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
 RUN mkdir $WORKDIR && \
     mkdir /home/ubuntu/ftpshare && \
     chown -R ubuntu:ubuntu /home/ubuntu/ftpshare && \
-    pip install gcovr
+    pip install gcovr==4.2
 
 COPY --chown=ubuntu:ubuntu basic.conf ${WORKDIR}/
 COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
@@ -81,5 +81,5 @@ RUN cd ${WORKDIR} && \
 USER root
 WORKDIR /home/ubuntu
 
-RUN pip install gcovr
+RUN pip install gcovr==4.2
 
