@@ -2,15 +2,15 @@
 ProFuzzBench is a benchmark for stateful fuzzing of network protocols. It includes a suite of representative open-source network servers for popular protocols (e.g., TLS, SSH, SMTP, FTP, SIP), and tools to automate experimentation.
 
 # Citing ProFuzzBench
-We have published a [technical report for ProFuzzBench](https://arxiv.org/abs/2101.05102).
+
+ProFuzzBench has been accepted for publication as a [Tool Demonstrations paper](https://dl.acm.org/doi/pdf/10.1145/3460319.3469077) at the 30th ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA) 2021.
+
 ```
-@misc{profuzzbench,
-      title={ProFuzzBench: A Benchmark for Stateful Protocol Fuzzing},
-      author={Roberto Natella and Van-Thuan Pham},
-      year={2021},
-      eprint={2101.05102},
-      archivePrefix={arXiv},
-      primaryClass={cs.CR}
+@inproceedings{profuzzbench,
+  title={ProFuzzBench: A Benchmark for Stateful Protocol Fuzzing},
+  author={Roberto Natella and Van-Thuan Pham},
+  booktitle={Proceedings of the 30th ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  year={2021}
 }
 ```
 
