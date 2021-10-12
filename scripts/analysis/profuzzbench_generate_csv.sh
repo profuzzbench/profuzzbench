@@ -50,7 +50,8 @@ for fuzzer in $fuzzers; do
   for i in $(seq 1 $runs); do 
     printf "\nProcessing out-${prog}-${fuzzer}-${i} ..."
     rm -rf out-${prog}-${fuzzer}-${i}
-    tar -zxvf out-${prog}-${fuzzer}_${i}.tar.gz > /dev/null 2>&1
+    #tar -zxvf out-${prog}-${fuzzer}_${i}.tar.gz > /dev/null 2>&1
+    tar -axf out-${prog}-${fuzzer}_${i}.tar.gz out-${prog}-${fuzzer}/cov_over_time.csv
     mv out-${prog}-${fuzzer} out-${prog}-${fuzzer}-${i}
     #combine all csv files
     convert $fuzzer $prog $i out-${prog}-${fuzzer}-${i}/cov_over_time.csv $covfile

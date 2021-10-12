@@ -39,4 +39,4 @@ for id in ${cids[@]}; do
   index=$((index+1))
 done
 
-printf "\n${FUZZER^^}: I am done!"
+printf "\n${FUZZER^^}: I am done!\n"
