@@ -1,0 +1,31 @@
+FROM dcmtk
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Dedicated instrumented version for StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+ENV AFL_PATH=${STATEAFL}
+
+ARG PAT_STATEAFL
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+RUN cd $WORKDIR && \
+    git clone https://github.com/DCMTK/dcmtk dcmtk-stateafl && \
+    cd dcmtk-stateafl && \
+    git checkout 7f8564c && \
+    patch -p1 < $WORKDIR/fuzzing.patch && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make dcmqrscp $MAKE_OPT
+
+
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+
+RUN cd $WORKDIR/dcmtk-stateafl/build/bin && \
+    mkdir ACME_STORE && \
+    cp $WORKDIR/dcmqrscp.cfg ./
+

@@ -1,0 +1,26 @@
+FROM live555
+
+# Dedicated instrumented version for StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+ENV AFL_PATH=${STATEAFL}
+
+ARG PAT_STATEAFL
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+RUN cd $WORKDIR && \
+    git clone https://github.com/rgaufman/live555.git live555-stateafl && \
+    cd live555-stateafl && \
+    git checkout ceeb4f4 && \
+    patch -p1 < $WORKDIR/fuzzing.patch && \
+    ./genMakefiles linux && \
+    make clean all $MAKE_OPT || make all
+
+# Set up Live555 for fuzzing
+RUN cd ${WORKDIR}/live555-stateafl/testProgs && \
+    cp ${AFLNET}/tutorials/live555/sample_media_sources/*.* ./
+
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+ 

@@ -1,0 +1,26 @@
+FROM tinydtls
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Dedicated instrumented version for StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+ENV AFL_PATH=${STATEAFL}
+
+ARG PAT_STATEAFL
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+RUN cd $WORKDIR && \
+    git clone https://github.com/assist-project/tinydtls-fuzz.git tinydtls-stateafl && \
+    cd tinydtls-stateafl && \
+    git checkout 06995d4 && \
+    cd tests && \
+    CC=${STATEAFL}/afl-clang-fast make clean && \
+    CC=${STATEAFL}/afl-clang-fast make ../libtinydtls.a $MAKE_OPT && \
+    CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+

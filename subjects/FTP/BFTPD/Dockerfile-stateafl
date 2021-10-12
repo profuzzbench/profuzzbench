@@ -1,0 +1,34 @@
+FROM bftpd
+
+# Use ubuntu as default username
+USER ubuntu
+WORKDIR /home/ubuntu
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Dedicated instrumented version for StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+ENV AFL_PATH=${STATEAFL}
+ENV STATEAFL_CFLAGS="-DENABLE_TRACE_GLOBAL_DATA"
+
+ARG PAT_STATEAFL
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
+
+RUN cd ${WORKDIR} && \
+    mkdir ${WORKDIR}/bftpd-stateafl && \
+    tar -zxvf bftpd-5.7.tar.gz -C ${WORKDIR}/bftpd-stateafl --strip-components=1 && \
+    cd ${WORKDIR}/bftpd-stateafl && \
+    patch -p1 < ${WORKDIR}/fuzzing.patch && \
+    CC=${STATEAFL}/afl-clang-fast make clean all $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+
+# Switch default user to root
+USER root
+WORKDIR /home/ubuntu
+
+
