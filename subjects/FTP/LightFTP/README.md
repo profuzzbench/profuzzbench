@@ -19,8 +19,8 @@ The following commands run 4 instances of AFLNet and 4 instances of AFLnwe to si
 cd $PFBENCH
 mkdir results-lightftp
 
-profuzzbench_exec_common.sh lightftp 4 results-lightftp aflnet out-lightftp-aflnet "-P FTP -D 10000 -q 3 -s 3 -E -K -c ./ftpclean.sh" 3600 5 &
-profuzzbench_exec_common.sh lightftp 4 results-lightftp aflnwe out-lightftp-aflnwe "-D 10000 -K -c ./ftpclean.sh" 3600 5
+profuzzbench_exec_common.sh lightftp 4 results-lightftp aflnet out-lightftp-aflnet "-P FTP -D 10000 -q 3 -s 3 -E -K" 3600 5 &
+profuzzbench_exec_common.sh lightftp 4 results-lightftp aflnwe out-lightftp-aflnwe "-D 10000 -K" 3600 5
 ```
 
 ## Step-3. Collect the results

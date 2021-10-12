@@ -1,3 +1,27 @@
+diff --git a/src/alt_arc4random.c b/src/alt_arc4random.c
+index 81bdfc7..3b4a2e8 100644
+--- a/src/alt_arc4random.c
++++ b/src/alt_arc4random.c
+@@ -137,6 +137,9 @@ static int random_dev_open(void)
+ 
+ void alt_arc4random_stir(void)
+ {
++    memset(&rng_state, 0, sizeof(rng_state));
++    return;
++
+     if (rng_state.initialized == 0) {
+         rng_state.fd = -1;
+     }
+@@ -154,6 +157,9 @@ void alt_arc4random_stir(void)
+ 
+ void alt_arc4random_buf(void* buffer, size_t len)
+ {
++    memset(buffer, 0, len);
++    return;
++
+     unsigned char *buffer_ = (unsigned char*)buffer;
+     size_t         off;
+     size_t         remaining;
 diff --git a/src/ftpd.c b/src/ftpd.c
 index 60b95b6..b03ee0b 100644
 --- a/src/ftpd.c

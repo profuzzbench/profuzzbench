@@ -9,15 +9,25 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
-    vim
+    vim \
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
+
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -32,12 +42,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -49,15 +59,12 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
+
+RUN mkdir $WORKDIR
 
 COPY --chown=ubuntu:ubuntu key.pem ${WORKDIR}/key.pem
 COPY --chown=ubuntu:ubuntu cert.pem ${WORKDIR}/cert.pem
-COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
-COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 
 # Download and compile OpenSSL for fuzzing
 RUN cd ${WORKDIR} && \
@@ -65,11 +72,9 @@ RUN cd ${WORKDIR} && \
     cd openssl && \
     cp ${WORKDIR}/*.pem ./ && \
     git checkout 0437435a && \
-    CC=afl-clang-fast ./config no-shared && \
-    CC=afl-clang-fast make include/openssl/configuration.h && \
-    CC=afl-clang-fast make include/openssl/opensslv.h && \
-    CC=afl-clang-fast make include/crypto/bn_conf.h && \
-    CC=afl-clang-fast make include/crypto/dso_conf.h && \
+    patch -p1 < ${WORKDIR}/rand.patch && \
+    CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
+    CC=afl-clang-fast make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
     CC=afl-clang-fast make apps/openssl $MAKE_OPT
 
 # Download and compile OpenSSL for coverage analysis
@@ -78,9 +83,13 @@ RUN cd ${WORKDIR} && \
     cd openssl-gcov && \
     cp ${WORKDIR}/*.pem ./ && \
     git checkout 0437435a && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/configuration.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/opensslv.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/bn_conf.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/crypto/dso_conf.h && \
+    patch -p1 < ${WORKDIR}/rand.patch && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
+COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+

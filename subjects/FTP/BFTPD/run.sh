@@ -13,12 +13,20 @@ strstr() {
 
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"bftpd"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
-  cd $WORKDIR/bftpd
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-ftp -o $OUTDIR -x ${WORKDIR}/ftp.dict -N tcp://127.0.0.1/21 $OPTIONS bftpd -D -c ${WORKDIR}/basic.conf
-  #Wait for the fuzzing process
-  wait 
+  cd $WORKDIR/${TARGET_DIR}
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-ftp -o $OUTDIR -x ${WORKDIR}/ftp.dict -N tcp://127.0.0.1/21 $OPTIONS -c ${WORKDIR}/clean ./bftpd -D -c ${WORKDIR}/basic.conf
+
+  STATUS=$?
 
   #Step-2. Collect code coverage over time
   #Move to gcov folder
@@ -28,17 +36,19 @@ if $(strstr $FUZZER "afl"); then
   #0: the test case is a concatenated message sequence -- there is no message boundary
   #1: the test case is a structured file keeping several request messages
   if [ $FUZZER = "aflnwe" ]; then
-    cov_script ${WORKDIR}/bftpd/${OUTDIR}/ 21 ${SKIPCOUNT} ${WORKDIR}/bftpd/${OUTDIR}/cov_over_time.csv 0
+    cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 21 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 0
   else
-    cov_script ${WORKDIR}/bftpd/${OUTDIR}/ 21 ${SKIPCOUNT} ${WORKDIR}/bftpd/${OUTDIR}/cov_over_time.csv 1
+    cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 21 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 1
   fi
 
   gcovr -r . --html --html-details -o index.html
-  mkdir ${WORKDIR}/bftpd/${OUTDIR}/cov_html/
-  cp *.html ${WORKDIR}/bftpd/${OUTDIR}/cov_html/
+  mkdir ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
+  cp *.html ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
 
   #Step-3. Save the result to the ${WORKDIR} folder
   #Tar all results to a file
-  cd ${WORKDIR}/bftpd
+  cd ${WORKDIR}/${TARGET_DIR}
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi

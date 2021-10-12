@@ -10,17 +10,27 @@ RUN apt-get -y update && \
     graphviz-dev \
     git \
     autoconf \
+    libgnutls-dev \
     libssl-dev \
-    sshpass \
     python-pip \
     nano \
     net-tools \
-    vim
+    vim \
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
 
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
+
+# Use ubuntu as default username
+USER ubuntu
 WORKDIR /home/ubuntu
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
@@ -32,12 +42,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -49,19 +59,23 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
 
-COPY --chown=ubuntu:ubuntu in-ssh ${WORKDIR}/in-ssh
-COPY --chown=ubuntu:ubuntu ssh.dict ${WORKDIR}/ssh.dict
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+RUN mkdir $WORKDIR
+
+USER root
+RUN apt-get -y install sshpass
+
+
+COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
+COPY --chown=ubuntu:ubuntu rand.inc ${WORKDIR}/rand.inc
 
 # Download and compile OpenSSH for fuzzing
 RUN cd ${WORKDIR} && \
     git clone https://github.com/vegard/openssh-portable.git openssh && \
     cd openssh && \
     git checkout 7cfea58 && \
+    cp ${WORKDIR}/rand.inc . && \
+    patch -p1 < ${WORKDIR}/rand.patch && \
     autoreconf && \
     ./configure \
     CC="afl-clang-fast" \
@@ -78,6 +92,8 @@ RUN cd ${WORKDIR} && \
     git clone https://github.com/vegard/openssh-portable.git openssh-gcov && \
     cd openssh-gcov && \
     git checkout 7cfea58 && \
+    cp ${WORKDIR}/rand.inc . && \
+    patch -p1 < ${WORKDIR}/rand.patch && \
     autoreconf && \
     ./configure \
     CC="gcc" \
@@ -90,7 +106,8 @@ RUN cd ${WORKDIR} && \
     make $MAKE_OPT && \
     make install
 
-# Run sshd and ssh once before fuzzing
-RUN cd ${WORKDIR}/openssh && \
-    ./sshd -d -e -p 22 -r -f sshd_config > /dev/null 2>&1 & sleep 5; sshpass -p "ubuntu" ssh -oStrictHostKeyChecking=no ubuntu@127.0.0.1 -p 22
-    
+COPY --chown=ubuntu:ubuntu in-ssh ${WORKDIR}/in-ssh
+COPY --chown=ubuntu:ubuntu ssh.dict ${WORKDIR}/ssh.dict
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+

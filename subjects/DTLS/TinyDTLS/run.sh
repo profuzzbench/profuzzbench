@@ -12,11 +12,20 @@ strstr() {
 
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"tinydtls"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dtls -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./tinydtls/tests/dtls-server
-  wait 
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dtls -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./${TARGET_DIR}/tests/dtls-server
+
+  STATUS=$?
 
   #Step-2. Collect code coverage over time
   #Move to gcov folder
@@ -39,4 +48,6 @@ if $(strstr $FUZZER "afl"); then
   #Tar all results to a file
   cd ${WORKDIR}
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi

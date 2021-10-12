@@ -27,8 +27,8 @@ The following commands run 4 instances of AFLNet and 4 instances of AFLnwe to si
 cd $PFBENCH
 mkdir results-forked-daapd
 
-profuzzbench_exec_common.sh forked-daapd 4 results-forked-daapd aflnet out-forked-daapd-aflnet "-P HTTP -D 2000000 -m 1000 -t 50000+ -q 3 -s 3 -E -K" 3600 5 &
-profuzzbench_exec_common.sh forked-daapd 4 results-forked-daapd aflnwe out-forked-daapd-aflnwe "-D 2000000 -m 1000 -t 50000+ -K" 3600 5
+profuzzbench_exec_common.sh forked-daapd 4 results-forked-daapd aflnet out-forked-daapd-aflnet "-P HTTP -D 200000 -m none -t 3000 -q 3 -s 3 -E -K" 3600 5 &
+profuzzbench_exec_common.sh forked-daapd 4 results-forked-daapd aflnwe out-forked-daapd-aflnwe "-D 200000 -m 1000 -t 3000 -K" 3600 5
 ```
 
 ## Step-3. Collect the results

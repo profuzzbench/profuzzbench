@@ -9,15 +9,25 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
-    vim
+    vim \
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
+
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -32,12 +42,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -49,16 +59,11 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
+
+RUN mkdir $WORKDIR
 
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
-COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
-COPY --chown=ubuntu:ubuntu ftp.dict ${WORKDIR}/ftp.dict
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
-COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/ftpclean
 
 # Download and compile LightFTP for fuzzing
 RUN cd $WORKDIR && \
@@ -89,3 +94,17 @@ RUN cd $WORKDIR && \
 RUN cd ${WORKDIR}/LightFTP-gcov/Source/Release && \
     cp ${AFLNET}/tutorials/lightftp/fftp.conf ./ && \
     cp ${AFLNET}/tutorials/lightftp/ftpclean.sh ./
+
+
+COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
+COPY --chown=ubuntu:ubuntu ftp.dict ${WORKDIR}/ftp.dict
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/ftpclean
+
+
+# For debugging purposes
+USER root
+RUN apt-get -y install ftp
+USER ubuntu
+

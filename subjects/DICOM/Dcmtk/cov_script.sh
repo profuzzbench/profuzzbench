@@ -31,29 +31,29 @@ fi
 
 
 #process initial seed corpus first
-for f in $(echo $folder/$testdir/*.raw); do 
+for f in $(echo $folder/$testdir/*.raw); do
   time=$(stat -c %Y $f)
 
   $replayer $f DICOM $pno 1 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGTERM 3s ./dcmqrscp > /dev/null 2>&1
-  
+  timeout -k 0 -s SIGTERM 3s ./dcmqrscp --single-process > /dev/null 2>&1
+
   wait
   cov_data=$(gcovr -r $WORKDIR/dcmtk-gcov -s | grep "[lb][a-z]*:")
   l_per=$(echo "$cov_data" | grep lines | cut -d" " -f2 | rev | cut -c2- | rev)
   l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
   b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
   b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-  
+
   echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
 done
 
 #process fuzzer-generated testcases
 count=0
-for f in $(echo $folder/$testdir/id*); do 
+for f in $(echo $folder/$testdir/id*); do
   time=$(stat -c %Y $f)
 
   $replayer $f DICOM $pno 1 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGTERM 3s ./dcmqrscp > /dev/null 2>&1
+  timeout -k 0 -s SIGTERM 3s ./dcmqrscp --single-process > /dev/null 2>&1
 
   wait
   count=$(expr $count + 1)
@@ -64,7 +64,7 @@ for f in $(echo $folder/$testdir/id*); do
   l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
   b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
   b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-  
+
   echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
 done
 
@@ -77,6 +77,6 @@ then
   l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
   b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
   b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-  
+
   echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
 fi

@@ -1,6 +1,5 @@
 FROM ubuntu:16.04
 
-RUN chmod 777 /tmp
 # Install common dependencies
 RUN apt-get -y update && \
     apt-get -y install sudo \ 
@@ -10,18 +9,27 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
     vim \
-    ftp \
+    gdb \
+    netcat \
+    strace \
     wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
 
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
+
+# Use ubuntu as default username
 USER ubuntu
 WORKDIR /home/ubuntu
 
@@ -34,30 +42,46 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
 ENV AFLNET="/home/ubuntu/aflnet"
-ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}:${WORKDIR}/bftpd"
+ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}"
 ENV AFL_PATH="${AFLNET}"
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    mkdir /home/ubuntu/ftpshare && \
-    chown -R ubuntu:ubuntu /home/ubuntu/ftpshare && \
-    pip install gcovr==4.2
+
+RUN mkdir $WORKDIR
 
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
+
+# Set up Bftpd for fuzzing
+RUN cd ${WORKDIR} && \
+    wget https://phoenixnap.dl.sourceforge.net/project/bftpd/bftpd/bftpd-5.7/bftpd-5.7.tar.gz && \
+    tar -zxvf bftpd-5.7.tar.gz && \
+    cd bftpd && \
+    patch -p1 < ${WORKDIR}/fuzzing.patch && \
+    CC=afl-clang-fast make clean all $MAKE_OPT
+
+# Set up Bftpd for coverage analysis
+RUN cd ${WORKDIR} && \
+    mkdir ${WORKDIR}/bftpd-gcov && \
+    tar -zxvf bftpd-5.7.tar.gz -C ${WORKDIR}/bftpd-gcov --strip-components=1 && \
+    cd ${WORKDIR}/bftpd-gcov && \
+    patch -p1 < ${WORKDIR}/gcov.patch && \
+    make $MAKE_OPT
+
+
 COPY --chown=ubuntu:ubuntu basic.conf ${WORKDIR}/
 COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
 COPY --chown=ubuntu:ubuntu ftp.dict ${WORKDIR}/ftp.dict
@@ -65,24 +89,14 @@ COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
 COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/clean
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 
+RUN mkdir /home/ubuntu/ftpshare && \
+    chown -R ubuntu:ubuntu /home/ubuntu/ftpshare
 
-# Set up Bftpd for fuzzing
-RUN cd ${WORKDIR} && \
-    wget https://phoenixnap.dl.sourceforge.net/project/bftpd/bftpd/bftpd-5.7/bftpd-5.7.tar.gz && \
-    tar -zxvf bftpd-5.7.tar.gz && \
-    mv bftpd bftpd-gcov && \
-    tar -zxvf bftpd-5.7.tar.gz && \
-    cd bftpd && \
-    patch -p1 < ${WORKDIR}/fuzzing.patch && \
-    CC=afl-clang-fast make clean all $MAKE_OPT
-
-# Set up Bftpd for coverage analysis
-RUN cd ${WORKDIR}/bftpd-gcov && \
-    patch -p1 < ${WORKDIR}/gcov.patch && \
-    make $MAKE_OPT
 
 # Switch default user to root
 USER root
 WORKDIR /home/ubuntu
 
-RUN pip install gcovr==4.2
+# For debugging purposes
+RUN apt-get -y install ftp
+

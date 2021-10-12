@@ -9,23 +9,24 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls28-dev \
     python-pip \
     nano \
     net-tools \
     vim \
-    bison \
-    flex \
-    autotools-dev autoconf automake libtool gettext gawk \
-    gperf antlr3 libantlr3c-dev libconfuse-dev libunistring-dev libsqlite3-dev \
-    libavcodec-dev libavformat-dev libavfilter-dev libswscale-dev libavutil-dev \
-    libasound2-dev libmxml-dev libgcrypt20-dev libavahi-client-dev zlib1g-dev \
-    libevent-dev libplist-dev libsodium-dev libjson-c-dev libwebsockets-dev \
-    libcurl4-openssl-dev avahi-daemon
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
+
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -40,12 +41,12 @@ ENV LLVM_CONFIG="llvm-config-6.0"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -57,16 +58,24 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
+
+RUN mkdir $WORKDIR
+
+USER root
+RUN apt-get -y update && \
+    apt-get -y install \
+    bison \
+    flex \
+    autotools-dev autoconf automake libtool gettext gawk \
+    gperf antlr3 libantlr3c-dev libconfuse-dev libunistring-dev libsqlite3-dev \
+    libavcodec-dev libavformat-dev libavfilter-dev libswscale-dev libavutil-dev \
+    libasound2-dev libmxml-dev libgcrypt20-dev libavahi-client-dev zlib1g-dev \
+    libevent-dev libplist-dev libsodium-dev libjson-c-dev libwebsockets-dev \
+    libcurl4-openssl-dev avahi-daemon
+USER ubuntu
 
 COPY --chown=ubuntu:ubuntu forked-daapd.patch ${WORKDIR}/forked-daapd.patch
 COPY --chown=ubuntu:ubuntu forked-daapd-gcov.patch ${WORKDIR}/forked-daapd-gcov.patch
-COPY --chown=ubuntu:ubuntu in-daap ${WORKDIR}/in-daap
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
-COPY --chown=ubuntu:ubuntu MP3 ${WORKDIR}/MP3
-COPY --chown=ubuntu:ubuntu forked-daapd.conf ${WORKDIR}/forked-daapd.conf
 
 
 # Download and compile forked-daapd for fuzzing
@@ -77,8 +86,8 @@ RUN cd $WORKDIR && \
     patch -p1 < $WORKDIR/forked-daapd.patch && \
     autoreconf -i && \
     CC=$AFLNET/afl-clang-fast CFLAGS="-DSQLITE_CORE" ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var  --disable-mpd --disable-itunes --disable-lastfm --disable-spotify --disable-verification  --disable-shared --enable-static && \
+    make -C src/ SMARTPL2SQL.c SMARTPL.c DAAP2SQL.c DAAPLexer.c RSPLexer.c RSP2SQL.c && \
     make clean all $MAKE_OPT
-
 
 # Download and compile forked-daapd for code coverage analysis
 RUN cd $WORKDIR && \
@@ -89,7 +98,9 @@ RUN cd $WORKDIR && \
     patch -p1 < $WORKDIR/forked-daapd-gcov.patch && \
     autoreconf -i && \
     CFLAGS="-DSQLITE_CORE -fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var  --disable-mpd --disable-itunes --disable-lastfm --disable-spotify --disable-verification  --disable-shared --enable-static && \
+    make -C src/ SMARTPL2SQL.c SMARTPL.c DAAP2SQL.c DAAPLexer.c RSPLexer.c RSP2SQL.c && \
     make clean all $MAKE_OPT
+
 
 # Setting up the environment using root account
 USER root
@@ -113,3 +124,10 @@ RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # Switch back to ubuntu account
 USER ubuntu
 RUN mkdir ${WORKDIR}/db
+
+COPY --chown=ubuntu:ubuntu in-daap ${WORKDIR}/in-daap
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu MP3 ${WORKDIR}/MP3
+COPY --chown=ubuntu:ubuntu forked-daapd.conf ${WORKDIR}/forked-daapd.conf
+

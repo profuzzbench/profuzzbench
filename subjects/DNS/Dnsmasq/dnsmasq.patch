@@ -11,3 +11,26 @@ index 19a6428..9493d74 100644
      if (i != STDOUT_FILENO && i != STDERR_FILENO && i != STDIN_FILENO)
        close(i);
      else
+diff --git a/src/util.c b/src/util.c
+index 9299703..1f419c4 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -37,7 +37,7 @@ static int outleft = 0;
+ 
+ void rand_init()
+ {
+-  int fd = open(RANDFILE, O_RDONLY);
++  /*int fd = open(RANDFILE, O_RDONLY);
+   
+   if (fd == -1 ||
+       !read_write(fd, (unsigned char *)&seed, sizeof(seed), 1) ||
+@@ -45,6 +45,9 @@ void rand_init()
+     die(_("failed to seed the random number generator: %s"), NULL, EC_MISC);
+   
+   close(fd);
++  */
++  memset(seed, 0, sizeof(seed));
++  memset(in, 0, sizeof(in));
+ }
+ 
+ #define ROTATE(x,b) (((x) << (b)) | ((x) >> (32 - (b))))

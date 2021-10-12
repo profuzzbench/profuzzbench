@@ -13,11 +13,20 @@ strstr() {
 
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"live555"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
-  cd $WORKDIR/live555/testProgs
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-rtsp -x ${WORKDIR}/rtsp.dict -o $OUTDIR -N tcp://127.0.0.1/8554 $OPTIONS ./testOnDemandRTSPServer 8554
-  wait 
+  cd $WORKDIR/${TARGET_DIR}/testProgs
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-rtsp -x ${WORKDIR}/rtsp.dict -o $OUTDIR -N tcp://127.0.0.1/8554 $OPTIONS ./testOnDemandRTSPServer 8554
+
+  STATUS=$?
 
   #Step-2. Collect code coverage over time
   #Move to gcov folder
@@ -27,9 +36,9 @@ if $(strstr $FUZZER "afl"); then
   #0: the test case is a concatenated message sequence -- there is no message boundary
   #1: the test case is a structured file keeping several request messages
   if [ $FUZZER == "aflnwe" ]; then
-    cov_script ${WORKDIR}/live555/testProgs/${OUTDIR}/ 8554 ${SKIPCOUNT} ${WORKDIR}/live555/testProgs/${OUTDIR}/cov_over_time.csv 0
+    cov_script ${WORKDIR}/${TARGET_DIR}/testProgs/${OUTDIR}/ 8554 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/testProgs/${OUTDIR}/cov_over_time.csv 0
   else
-    cov_script ${WORKDIR}/live555/testProgs/${OUTDIR}/ 8554 ${SKIPCOUNT} ${WORKDIR}/live555/testProgs/${OUTDIR}/cov_over_time.csv 1
+    cov_script ${WORKDIR}/${TARGET_DIR}/testProgs/${OUTDIR}/ 8554 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/testProgs/${OUTDIR}/cov_over_time.csv 1
   fi
 
   cd $WORKDIR/live555-cov
@@ -41,11 +50,13 @@ if $(strstr $FUZZER "afl"); then
   cd testProgs
 
   gcovr -r .. --html --html-details -o index.html
-  mkdir ${WORKDIR}/live555/testProgs/${OUTDIR}/cov_html/
+  mkdir ${WORKDIR}/${TARGET_DIR}/testProgs/${OUTDIR}/cov_html/
   cp *.html ${WORKDIR}/live555/testProgs/${OUTDIR}/cov_html/
 
   #Step-3. Save the result to the ${WORKDIR} folder
   #Tar all results to a file
-  cd ${WORKDIR}/live555/testProgs
+  cd ${WORKDIR}/${TARGET_DIR}/testProgs
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi

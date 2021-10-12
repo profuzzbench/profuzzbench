@@ -9,17 +9,28 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
     vim \
-    cmake
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
 
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
+
+# Use ubuntu as default username
+USER ubuntu
 WORKDIR /home/ubuntu
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
@@ -31,12 +42,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -48,15 +59,14 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
 
-COPY --chown=ubuntu:ubuntu in-dicom ${WORKDIR}/in-dicom
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+RUN mkdir $WORKDIR
+
+USER root
+RUN apt-get -y install cmake
+
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu normal.patch ${WORKDIR}/normal.patch
-COPY --chown=ubuntu:ubuntu dcmqrscp.cfg ${WORKDIR}/dcmqrscp.cfg
 
 # Download and compile Dcmtk for fuzzing
 RUN cd $WORKDIR && \
@@ -78,12 +88,21 @@ RUN cd $WORKDIR && \
     cmake -G"Unix Makefiles" .. -DCMAKE_C_FLAGS="-g -fprofile-arcs -ftest-coverage" -DCMAKE_CXX_FLAGS="-g -fprofile-arcs -ftest-coverage" && \
     make dcmqrscp $MAKE_OPT
 
-# Setup server for fuzzing and coverage analysis
+
+# Setup server
+
+COPY --chown=ubuntu:ubuntu dcmqrscp.cfg ${WORKDIR}/dcmqrscp.cfg
+COPY --chown=ubuntu:ubuntu in-dicom ${WORKDIR}/in-dicom
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+
+ENV DCMDICTPATH=${WORKDIR}/dcmtk/dcmdata/data/dicom.dic
+
 RUN cd $WORKDIR/dcmtk/build/bin && \
     mkdir ACME_STORE && \
-    cp $WORKDIR/dcmqrscp.cfg ./ && \
-    export DCMDICTPATH=$WORKDIR/dcmtk/dcmdata/data/dicom.dic
+    cp $WORKDIR/dcmqrscp.cfg ./
 
 RUN cd $WORKDIR/dcmtk-gcov/build/bin && \
     mkdir ACME_STORE && \
     cp $WORKDIR/dcmqrscp.cfg ./
+

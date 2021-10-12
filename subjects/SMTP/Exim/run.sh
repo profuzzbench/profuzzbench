@@ -13,34 +13,48 @@ strstr() {
 
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"exim"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
-  cd $WORKDIR/exim
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-smtp -x ${WORKDIR}/smtp.dict -o $OUTDIR -N tcp://127.0.0.1/25 $OPTIONS exim -bd -oX 25
-  wait
+  cd $WORKDIR/${TARGET_DIR}
+  cp ./src/build-Linux-x86_64/exim /usr/exim/bin/exim
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-smtp -x ${WORKDIR}/smtp.dict -o $OUTDIR -N tcp://127.0.0.1/25 $OPTIONS -c ${WORKDIR}/clean exim -bd -d -oX 25 -oP /var/lock/exim.pid
 
-  #Step-2. Compile Exim for code coverage analysis
-  $WORKDIR/compile_exim_gcov.sh
+  STATUS=$?
 
-  #Step-3. Collect code coverage over time
+  ${WORKDIR}/clean
+  killall exim 2>&1
+  sleep 1
+
+  #Step-2. Collect code coverage over time
   #Move to gcov folder
   cd $WORKDIR/exim-gcov
+  cp ./src/build-Linux-x86_64/exim /usr/exim/bin/exim
 
   #The last argument passed to cov_script should be 0 if the fuzzer is afl/nwe and it should be 1 if the fuzzer is based on aflnet
   #0: the test case is a concatenated message sequence -- there is no message boundary
   #1: the test case is a structured file keeping several request messages
   if [ $FUZZER = "aflnwe" ]; then
-    cov_script ${WORKDIR}/exim/${OUTDIR}/ 25 ${SKIPCOUNT} ${WORKDIR}/exim/${OUTDIR}/cov_over_time.csv 0
+    cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 25 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 0
   else
-    cov_script ${WORKDIR}/exim/${OUTDIR}/ 25 ${SKIPCOUNT} ${WORKDIR}/exim/${OUTDIR}/cov_over_time.csv 1
+    cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 25 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 1
   fi
 
   gcovr -r . --html --html-details -o index.html
-  mkdir ${WORKDIR}/exim/${OUTDIR}/cov_html/
-  cp *.html ${WORKDIR}/exim/${OUTDIR}/cov_html/
+  mkdir ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
+  cp *.html ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
 
   #Step-4. Save the result to the ${WORKDIR} folder
   #Tar all results to a file
-  cd ${WORKDIR}/exim
+  cd ${WORKDIR}/${TARGET_DIR}
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi

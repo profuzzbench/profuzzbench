@@ -1,6 +1,5 @@
 FROM ubuntu:16.04
 
-RUN chmod 777 /tmp
 # Install common dependencies
 RUN apt-get -y update && \
     apt-get -y install sudo \ 
@@ -10,19 +9,27 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
     vim \
-    ftp \
-    automake
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
-    useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)" && \
-    useradd -rm -d /home/fuzzing -s /bin/bash -g ubuntu -G sudo -u 1001 fuzzing -p "$(openssl passwd -1 fuzzing)"
+    useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
 
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
+
+# Use ubuntu as default username
 USER ubuntu
 WORKDIR /home/ubuntu
 
@@ -35,33 +42,32 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
 ENV AFLNET="/home/ubuntu/aflnet"
-ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}:${WORKDIR}/pure-ftpd"
+ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}"
 ENV AFL_PATH="${AFLNET}"
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
+
+RUN mkdir $WORKDIR
 
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
-COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
-COPY --chown=ubuntu:ubuntu ftp.dict ${WORKDIR}/ftp.dict
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
-COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/clean
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+
+USER root
+RUN apt -y install automake
+USER ubuntu
 
 # Set up PureFTPD for fuzzing
 RUN cd ${WORKDIR} && \
@@ -69,7 +75,7 @@ RUN cd ${WORKDIR} && \
     cd pure-ftpd && \
     git checkout c21b45f && \
     patch -p1 < ${WORKDIR}/fuzzing.patch && \
-    autogen.sh && \
+    ./autogen.sh && \
     CC="afl-clang-fast" CXX="afl-clang-fast++" ./configure --without-privsep -without-capabilities && \
     make $MAKE_OPT
 
@@ -79,12 +85,22 @@ RUN cd ${WORKDIR} && \
     cd pure-ftpd-gcov && \
     git checkout c21b45f && \
     patch -p1 < ${WORKDIR}/gcov.patch && \
-    autogen.sh && \
+    ./autogen.sh && \
     CFLAGS="-fprofile-arcs -ftest-coverage" CPPFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --without-privsep -without-capabilities && \
     make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-ftp ${WORKDIR}/in-ftp
+COPY --chown=ubuntu:ubuntu ftp.dict ${WORKDIR}/ftp.dict
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/clean
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 
 # Switch default user to root
 USER root
 WORKDIR /home/ubuntu
 
-RUN pip install gcovr==4.2
+RUN useradd -rm -d /home/fuzzing -s /bin/bash -g ubuntu -G sudo -u 1001 fuzzing -p "$(openssl passwd -1 fuzzing)"
+
+# For debugging purposes
+RUN apt-get -y install ftp
+

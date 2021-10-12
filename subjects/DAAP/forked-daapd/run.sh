@@ -15,16 +15,37 @@ strstr() {
 sudo /etc/init.d/dbus start
 sudo /etc/init.d/avahi-daemon start
 
+sudo /etc/init.d/dbus status
+if [ $? -ne 0 ]
+then
+  echo "Unable to run DBUS"
+  exit 1
+fi
+
+sudo /etc/init.d/avahi-daemon status
+if [ $? -ne 0 ]
+then
+  echo "Unable to run AVAHI daemon"
+  exit 1
+fi
+
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"forked-daapd"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR
 
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-daap -o $OUTDIR -N tcp://127.0.0.1/3689 $OPTIONS ${WORKDIR}/forked-daapd/src/forked-daapd -d 0 -c ${WORKDIR}/forked-daapd.conf -f
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-daap -o $OUTDIR -N tcp://127.0.0.1/3689 $OPTIONS ${WORKDIR}/${TARGET_DIR}/src/forked-daapd -d 0 -c ${WORKDIR}/forked-daapd.conf -f
 
-  #Wait for the fuzzing process
-  wait 
+  STATUS=$?
 
   #Step-2. Collect code coverage over time
   #Move to gcov folder
@@ -48,4 +69,6 @@ if $(strstr $FUZZER "afl"); then
   #Tar all results to a file
   cd ${WORKDIR}
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi

@@ -9,17 +9,25 @@ RUN apt-get -y update && \
     clang \
     graphviz-dev \
     git \
+    autoconf \
     libgnutls-dev \
+    libssl-dev \
     python-pip \
     nano \
     net-tools \
     vim \
-    bison \
-    flex
+    gdb \
+    netcat \
+    strace \
+    wget
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
+
+RUN chmod 777 /tmp
+
+RUN pip install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -34,12 +42,12 @@ ENV LLVM_CONFIG="llvm-config-3.8"
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
-    make clean all && \
+    make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for AFLNet
@@ -51,17 +59,17 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-RUN mkdir $WORKDIR && \
-    pip install gcovr==4.2
 
-COPY --chown=ubuntu:ubuntu in-sip ${WORKDIR}/in-sip
-COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
-COPY --chown=ubuntu:ubuntu run_pjsip.sh ${WORKDIR}/run_pjsip
+RUN mkdir $WORKDIR
+
+USER root
+RUN apt-get -y install \
+    bison \
+    flex
+USER ubuntu
+
 COPY --chown=ubuntu:ubuntu kamailio.patch ${WORKDIR}/kamailio.patch
 COPY --chown=ubuntu:ubuntu pjsip.patch ${WORKDIR}/pjsip.patch
-COPY --chown=ubuntu:ubuntu kamailio-basic.cfg ${WORKDIR}/kamailio-basic.cfg
-COPY --chown=ubuntu:ubuntu StarWars3.wav ${WORKDIR}/StarWars3.wav
 
 # Download and compile Kamalio for fuzzing
 RUN cd $WORKDIR && \
@@ -69,7 +77,7 @@ RUN cd $WORKDIR && \
     cd kamailio && \
     git checkout 2648eb3 && \
     patch -p1 < $WORKDIR/kamailio.patch && \
-    CC=afl-clang-fast make cfg && \
+    CC=afl-clang-fast make MEMPKG=sys cfg && \
     CC=afl-clang-fast make all $MAKE_OPT
 
 RUN cd $WORKDIR && \
@@ -86,5 +94,13 @@ RUN cd $WORKDIR && \
     cd kamailio-gcov && \
     git checkout 2648eb3 && \
     patch -p1 < $WORKDIR/kamailio.patch && \
-    make CC_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" LD_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" cfg && \
+    make CC_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" LD_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" MEMPKG=sys cfg && \
     make CC_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" LD_EXTRA_OPTS="-fprofile-arcs -ftest-coverage" all $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-sip ${WORKDIR}/in-sip
+COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
+COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run_pjsip.sh ${WORKDIR}/run_pjsip
+COPY --chown=ubuntu:ubuntu kamailio-basic.cfg ${WORKDIR}/kamailio-basic.cfg
+COPY --chown=ubuntu:ubuntu StarWars3.wav ${WORKDIR}/StarWars3.wav
+

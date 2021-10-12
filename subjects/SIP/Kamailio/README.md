@@ -19,8 +19,8 @@ The following commands run 4 instances of AFLNet and 4 instances of AFLnwe to si
 cd $PFBENCH
 mkdir results-kamailio
 
-profuzzbench_exec_common.sh kamailio 4 results-kamailio aflnet out-kamailio-aflnet "-m 200 -t 3000+ -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K -c run_pjsip" 3600 5 &
-profuzzbench_exec_common.sh kamailio 4 results-kamailio aflnwe out-kamailio-aflnwe "-m 200 -t 3000+ -D 50000 -K -c run_pjsip" 3600 5
+profuzzbench_exec_common.sh kamailio 4 results-kamailio aflnet out-kamailio-aflnet "-m 200 -t 3000+ -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K" 3600 5 &
+profuzzbench_exec_common.sh kamailio 4 results-kamailio aflnwe out-kamailio-aflnwe "-m 200 -t 3000+ -D 50000 -K" 3600 5
 ```
 
 ## Step-3. Collect the results

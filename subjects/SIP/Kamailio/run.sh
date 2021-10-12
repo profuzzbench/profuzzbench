@@ -13,16 +13,23 @@ strstr() {
 
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
+
+  # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
+
+  TARGET_DIR=${TARGET_DIR:-"kamailio"}
+
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
-  export KAMAILIO_MODULES=${WORKDIR}/kamailio/src/modules
-  export KAMAILIO_RUNTIME_DIR=${WORKDIR}/kamailio/runtime_dir
+  export KAMAILIO_MODULES=${WORKDIR}/${TARGET_DIR}/src/modules
+  export KAMAILIO_RUNTIME_DIR=${WORKDIR}/${TARGET_DIR}/runtime_dir
   cd $WORKDIR
 
-  timeout -k 0 $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-sip -o $OUTDIR -N udp://127.0.0.1/5060 $OPTIONS ./kamailio/src/kamailio -f ${WORKDIR}/kamailio-basic.cfg -L $KAMAILIO_MODULES -Y $KAMAILIO_RUNTIME_DIR -n 1 -D -E
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-sip -o $OUTDIR -N udp://127.0.0.1/5060 $OPTIONS -c ${WORKDIR}/run_pjsip ./${TARGET_DIR}/src/kamailio -f ${WORKDIR}/kamailio-basic.cfg -L $KAMAILIO_MODULES -Y $KAMAILIO_RUNTIME_DIR -n 1 -D -E
 
-  #Wait for the fuzzing process
-  wait 
+  STATUS=$?
 
   #Step-2. Collect code coverage over time
   #Move to gcov folder
@@ -46,4 +53,6 @@ if $(strstr $FUZZER "afl"); then
   #Tar all results to a file
   cd ${WORKDIR}
   tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+
+  exit $STATUS
 fi
