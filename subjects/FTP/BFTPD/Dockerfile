@@ -65,6 +65,10 @@ RUN mkdir $WORKDIR
 COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 # Set up Bftpd for fuzzing
 RUN cd ${WORKDIR} && \
     wget https://phoenixnap.dl.sourceforge.net/project/bftpd/bftpd/bftpd-5.7/bftpd-5.7.tar.gz && \
@@ -72,6 +76,10 @@ RUN cd ${WORKDIR} && \
     cd bftpd && \
     patch -p1 < ${WORKDIR}/fuzzing.patch && \
     CC=afl-clang-fast make clean all $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
+
 
 # Set up Bftpd for coverage analysis
 RUN cd ${WORKDIR} && \

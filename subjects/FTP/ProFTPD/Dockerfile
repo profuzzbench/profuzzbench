@@ -60,6 +60,11 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_NO_AFFINITY=1
 
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
+
 RUN mkdir $WORKDIR
 
 # Use "--enable-devel=...:coredump:stacktrace" for debugging
@@ -71,6 +76,9 @@ RUN cd ${WORKDIR} && \
     git checkout 4017eff8 && \
     CC="afl-clang-fast" CXX="afl-clang-fast++" ./configure --enable-devel=nodaemon:nofork && \
     make $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
 
 # Set up ProFTPD for coverage analysis
 RUN cd ${WORKDIR} && \

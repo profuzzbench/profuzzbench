@@ -78,6 +78,10 @@ COPY --chown=ubuntu:ubuntu forked-daapd.patch ${WORKDIR}/forked-daapd.patch
 COPY --chown=ubuntu:ubuntu forked-daapd-gcov.patch ${WORKDIR}/forked-daapd-gcov.patch
 
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 # Download and compile forked-daapd for fuzzing
 RUN cd $WORKDIR && \
     git clone https://github.com/ejurgensen/forked-daapd.git && \
@@ -88,6 +92,9 @@ RUN cd $WORKDIR && \
     CC=$AFLNET/afl-clang-fast CFLAGS="-DSQLITE_CORE" ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var  --disable-mpd --disable-itunes --disable-lastfm --disable-spotify --disable-verification  --disable-shared --enable-static && \
     make -C src/ SMARTPL2SQL.c SMARTPL.c DAAP2SQL.c DAAPLexer.c RSPLexer.c RSP2SQL.c && \
     make clean all $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
 
 # Download and compile forked-daapd for code coverage analysis
 RUN cd $WORKDIR && \

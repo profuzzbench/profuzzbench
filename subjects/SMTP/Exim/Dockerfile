@@ -74,7 +74,12 @@ RUN apt-get -y install \
 
 COPY --chown=ubuntu:ubuntu exim.patch ${WORKDIR}/exim.patch
 COPY --chown=ubuntu:ubuntu exim-rand.patch ${WORKDIR}/exim-rand.patch
+COPY --chown=ubuntu:ubuntu exim-log-bug.patch ${WORKDIR}/exim-log-bug.patch
 COPY --chown=ubuntu:ubuntu exim.configure.patch ${WORKDIR}/exim.configure.patch
+
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
 
 # Download, compile and install Exim for fuzzing
 RUN cd ${WORKDIR} && \
@@ -82,9 +87,14 @@ RUN cd ${WORKDIR} && \
     cd exim && \
     git checkout 38903fb && \
     patch -p1 < ${WORKDIR}/exim-rand.patch && \
+    patch -p1 < ${WORKDIR}/exim-log-bug.patch && \
     cd src; mkdir Local; cp src/EDITME Local/Makefile && \
     cd Local; patch -p1 < ${WORKDIR}/exim.patch; cd .. && \
     make CC=afl-clang-fast clean all install $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
+
 
 # Download and compile Exim for coverage analysis
 RUN cd ${WORKDIR} && \
@@ -92,6 +102,7 @@ RUN cd ${WORKDIR} && \
     cd exim-gcov && \
     git checkout 38903fb && \
     patch -p1 < ${WORKDIR}/exim-rand.patch && \
+    patch -p1 < ${WORKDIR}/exim-log-bug.patch && \
     cd src; mkdir Local; cp src/EDITME Local/Makefile && \
     cd Local; patch -p1 < ${WORKDIR}/exim.patch; cd .. && \
     make CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" LFLAGS+="-lgcov --coverage" clean all $MAKE_OPT

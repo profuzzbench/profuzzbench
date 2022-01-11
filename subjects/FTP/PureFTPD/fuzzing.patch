@@ -23,9 +23,18 @@ index 81bdfc7..3b4a2e8 100644
      size_t         off;
      size_t         remaining;
 diff --git a/src/ftpd.c b/src/ftpd.c
-index 60b95b6..b03ee0b 100644
+index 60b95b6..5f7d3a7 100644
 --- a/src/ftpd.c
 +++ b/src/ftpd.c
+@@ -4623,7 +4623,7 @@ static void fixlimits(void)
+     lim.rlim_max = lim.rlim_cur = MAX_CPU_TIME;
+     setrlimit(RLIMIT_CPU, &lim);
+     lim.rlim_max = lim.rlim_cur = MAX_DATA_SIZE;
+-    setrlimit(RLIMIT_DATA, &lim);
++    //setrlimit(RLIMIT_DATA, &lim);
+ # ifndef DEBUG
+     lim.rlim_max = lim.rlim_cur = 0;
+     setrlimit(RLIMIT_CORE, &lim);
 @@ -5278,7 +5278,7 @@ static void accept_client(const int active_listen_fd) {
      sigaddset(&set, SIGCHLD);
      sigprocmask(SIG_BLOCK, &set, NULL);

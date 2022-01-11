@@ -66,6 +66,10 @@ COPY --chown=ubuntu:ubuntu key.pem ${WORKDIR}/key.pem
 COPY --chown=ubuntu:ubuntu cert.pem ${WORKDIR}/cert.pem
 COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 # Download and compile OpenSSL for fuzzing
 RUN cd ${WORKDIR} && \
     git clone https://github.com/openssl/openssl.git && \
@@ -76,6 +80,10 @@ RUN cd ${WORKDIR} && \
     CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
     CC=afl-clang-fast make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
     CC=afl-clang-fast make apps/openssl $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
+
 
 # Download and compile OpenSSL for coverage analysis
 RUN cd ${WORKDIR} && \

@@ -18,6 +18,10 @@ RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 RUN cd ${WORKDIR} && \
     mkdir ${WORKDIR}/bftpd-stateafl && \
     tar -zxvf bftpd-5.7.tar.gz -C ${WORKDIR}/bftpd-stateafl --strip-components=1 && \

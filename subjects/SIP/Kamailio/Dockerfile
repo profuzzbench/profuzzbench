@@ -71,6 +71,10 @@ USER ubuntu
 COPY --chown=ubuntu:ubuntu kamailio.patch ${WORKDIR}/kamailio.patch
 COPY --chown=ubuntu:ubuntu pjsip.patch ${WORKDIR}/pjsip.patch
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 # Download and compile Kamalio for fuzzing
 RUN cd $WORKDIR && \
     git clone https://github.com/kamailio/kamailio.git && \
@@ -80,6 +84,10 @@ RUN cd $WORKDIR && \
     CC=afl-clang-fast make MEMPKG=sys cfg && \
     CC=afl-clang-fast make all $MAKE_OPT
 
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
+
+# Build SIP client to simulate the callee
 RUN cd $WORKDIR && \
     git clone https://github.com/pjsip/pjproject.git && \
     cd pjproject && \

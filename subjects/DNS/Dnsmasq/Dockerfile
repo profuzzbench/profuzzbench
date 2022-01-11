@@ -67,6 +67,10 @@ RUN apt-get -y install dnsutils
 
 COPY --chown=ubuntu:ubuntu dnsmasq.patch ${WORKDIR}/dnsmasq.patch
 
+# Set up environment variables for ASAN
+env AFL_USE_ASAN=1
+env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
+
 # Download and compile Dnsmasq for fuzzing
 RUN cd $WORKDIR && \
     git clone git://thekelleys.org.uk/dnsmasq.git && \
@@ -74,6 +78,9 @@ RUN cd $WORKDIR && \
     git checkout v2.73rc6 && \
     patch -p1 < ${WORKDIR}/dnsmasq.patch && \
     CC=afl-clang-fast make $MAKE_OPT
+
+# Disable ASAN for better performance in coverage analysis
+env AFL_USE_ASAN=0
 
 # Download and compile Dnsmasq for coverage analysis
 RUN cd $WORKDIR && \
