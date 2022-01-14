@@ -69,7 +69,7 @@ COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu normal.patch ${WORKDIR}/normal.patch
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
+# We only enable ASAN during make (cmake gets stuck when testing system libraries)
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
 
 # Download and compile Dcmtk for fuzzing
@@ -80,10 +80,8 @@ RUN cd $WORKDIR && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
     mkdir build && cd build && \
     cmake .. && \
-    make dcmqrscp $MAKE_OPT
+    AFL_USE_ASAN=1 make dcmqrscp $MAKE_OPT
 
-# Disable ASAN for better performance in coverage analysis
-env AFL_USE_ASAN=0
 
 # Download and compile Dcmtk for coverage analysis
 RUN cd $WORKDIR && \

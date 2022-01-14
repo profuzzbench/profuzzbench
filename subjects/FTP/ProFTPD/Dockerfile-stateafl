@@ -7,12 +7,10 @@ WORKDIR /home/ubuntu
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
 
-# Dedicated instrumented version for StateAFL
+# Set up StateAFL
 ENV STATEAFL="/home/ubuntu/stateafl"
-ENV AFL_PATH=${STATEAFL}
 ENV STATEAFL_CFLAGS="-DENABLE_TRACE_GLOBAL_DATA -DBLACKLIST_ALLOC_SITES"
 
-ARG PAT_STATEAFL
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
     make clean all $MAKE_OPT && \
@@ -24,6 +22,11 @@ COPY --chown=ubuntu:ubuntu malloc.patch ${WORKDIR}/malloc.patch
 env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0'
 
+# Set up environment variables for StateAFL
+ENV AFL_PATH=${STATEAFL}
+ENV PATH=${STATEAFL}:${PATH}
+
+# Dedicated instrumented version for StateAFL
 RUN cd ${WORKDIR} && \
     git clone https://github.com/proftpd/proftpd.git proftpd-stateafl && \
     cd proftpd-stateafl && \
