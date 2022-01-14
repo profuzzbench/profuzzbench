@@ -1,6 +1,14 @@
---- configure	2020-03-31 12:41:46.040047772 +1100
-+++ exim/configure	2020-03-31 12:39:54.935685671 +1100
-@@ -359,7 +359,6 @@
+--- exim.orig/configure	2022-01-14 14:25:04.434851252 +0000
++++ exim/configure	2022-01-14 14:27:22.224399349 +0000
+@@ -339,6 +339,7 @@
+ 
+ # keep_environment = ^LDAP
+ # add_environment = PATH=/usr/bin::/bin
++keep_environment = ASAN_OPTIONS
+ 
+ 
+ 
+@@ -359,7 +360,6 @@
    # testing for an empty sending host field.
  
    accept  hosts = :
@@ -8,7 +16,7 @@
  
    #############################################################################
    # The following section of the ACL is concerned with local parts that contain
-@@ -438,7 +437,6 @@
+@@ -438,7 +438,6 @@
  
    accept  hosts         = +relay_from_hosts
            control       = submission
@@ -16,7 +24,7 @@
  
    # Accept if the message arrived over an authenticated connection, from
    # any host. Again, these messages are usually from MUAs, so recipient
-@@ -447,7 +445,6 @@
+@@ -447,7 +446,6 @@
  
    accept  authenticated = *
            control       = submission
@@ -24,7 +32,7 @@
  
    # Insist that a HELO/EHLO was accepted.
  
-@@ -577,14 +574,14 @@
+@@ -577,14 +575,14 @@
  # If the DNS lookup fails, no further routers are tried because of the no_more
  # setting, and consequently the address is unrouteable.
  

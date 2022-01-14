@@ -65,17 +65,17 @@ do
 
             if [[ $FUZZER == "aflnet" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh bftpd $NUM_CONTAINERS results-bftpd aflnet out-bftpd-aflnet "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh bftpd $NUM_CONTAINERS results-bftpd aflnet out-bftpd-aflnet "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "stateafl" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh bftpd-stateafl $NUM_CONTAINERS results-bftpd stateafl out-bftpd-stateafl "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh bftpd-stateafl $NUM_CONTAINERS results-bftpd stateafl out-bftpd-stateafl "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "aflnwe" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh bftpd $NUM_CONTAINERS results-bftpd aflnwe out-bftpd-aflnwe "-t 2000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh bftpd $NUM_CONTAINERS results-bftpd aflnwe out-bftpd-aflnwe "-t 3000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
             fi
 
         fi
@@ -89,17 +89,17 @@ do
 
             if [[ $FUZZER == "aflnet" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh proftpd $NUM_CONTAINERS results-proftpd aflnet out-proftpd-aflnet "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh proftpd $NUM_CONTAINERS results-proftpd aflnet out-proftpd-aflnet "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "stateafl" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh proftpd-stateafl $NUM_CONTAINERS results-proftpd stateafl out-proftpd-stateafl "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh proftpd-stateafl $NUM_CONTAINERS results-proftpd stateafl out-proftpd-stateafl "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "aflnwe" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh proftpd $NUM_CONTAINERS results-proftpd aflnwe out-proftpd-aflnwe "-t 2000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh proftpd $NUM_CONTAINERS results-proftpd aflnwe out-proftpd-aflnwe "-t 3000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
             fi
 
         fi
@@ -112,17 +112,17 @@ do
 
             if [[ $FUZZER == "aflnet" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh pure-ftpd $NUM_CONTAINERS results-pure-ftpd aflnet out-pure-ftpd-aflnet "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh pure-ftpd $NUM_CONTAINERS results-pure-ftpd aflnet out-pure-ftpd-aflnet "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
                 fi
 
             if [[ $FUZZER == "stateafl" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh pure-ftpd-stateafl $NUM_CONTAINERS results-pure-ftpd stateafl out-pure-ftpd-stateafl "-t 2000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh pure-ftpd-stateafl $NUM_CONTAINERS results-pure-ftpd stateafl out-pure-ftpd-stateafl "-t 3000 -m none -P FTP -D 10000 -q 3 -s 3 -E -K" $TIMEOUT $SKIPCOUNT
                 fi
 
             if [[ $FUZZER == "aflnwe" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh pure-ftpd $NUM_CONTAINERS results-pure-ftpd aflnwe out-pure-ftpd-aflnwe "-t 2000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh pure-ftpd $NUM_CONTAINERS results-pure-ftpd aflnwe out-pure-ftpd-aflnwe "-t 3000 -m none -D 10000 -K" $TIMEOUT $SKIPCOUNT
                 fi
 
         fi
