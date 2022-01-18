@@ -32,7 +32,7 @@ RUN cd ${WORKDIR} && \
     cd proftpd-stateafl && \
     git checkout 4017eff8 && \
     patch -p1 < ${WORKDIR}/malloc.patch && \
-    CC=${STATEAFL}/afl-clang-fast CXX=${STATEAFL}/afl-clang-fast++ CFLAGS="-mllvm -asan-globals=0" ./configure --enable-devel=nodaemon:nofork && \
+    CC=${STATEAFL}/afl-clang-fast CXX=${STATEAFL}/afl-clang-fast++ ./configure --enable-devel=nodaemon:nofork && \
     make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl

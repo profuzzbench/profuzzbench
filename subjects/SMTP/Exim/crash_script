@@ -29,7 +29,7 @@ for f in $(echo $folder/$testdir/id* | grep -v "*"); do
 
   exim -bd -oX $pno -oP /var/lock/exim.pid
 
-  $replayer $f FTP $pno 1 #>/dev/null 2>&1
+  $replayer $f SMTP $pno 1 #>/dev/null 2>&1
 
   wait
 

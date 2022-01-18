@@ -29,7 +29,7 @@ RUN cd ${WORKDIR} && \
     patch -p1 < ${WORKDIR}/exim-log-bug.patch && \
     cd src; mkdir Local; cp src/EDITME Local/Makefile && \
     cd Local; patch -p1 < ${WORKDIR}/exim.patch; cd .. && \
-    make CC=${STATEAFL}/afl-clang-fast CFLAGS="-mllvm -asan-globals=0" clean all $MAKE_OPT
+    make CC=${STATEAFL}/afl-clang-fast clean all $MAKE_OPT
 
 
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
