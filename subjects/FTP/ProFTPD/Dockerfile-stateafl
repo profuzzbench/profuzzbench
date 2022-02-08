@@ -45,7 +45,7 @@ RUN touch /home/ubuntu/.tree.mvp && \
 
 RUN touch /home/ubuntu/.tree.count.mvp && \
     chmod ugo+rw /home/ubuntu/.tree.count.mvp && \
-    ln -s /home/ubuntu/.tree.count.mvp ${WORKDIR}/proftpd-stateafl/.tree.count.mvp
+    ln /home/ubuntu/.tree.count.mvp ${WORKDIR}/proftpd-stateafl/.tree.count.mvp
 
 # Switch default user to root
 USER root
