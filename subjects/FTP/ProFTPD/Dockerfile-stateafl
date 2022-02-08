@@ -9,7 +9,7 @@ ARG MAKE_OPT
 
 # Set up StateAFL
 ENV STATEAFL="/home/ubuntu/stateafl"
-ENV STATEAFL_CFLAGS="-DENABLE_TRACE_GLOBAL_DATA -DBLACKLIST_ALLOC_SITES"
+ENV STATEAFL_CFLAGS="-DENABLE_TRACE_GLOBAL_DATA -DBLACKLIST_ALLOC_SITES -DBLACKLIST_GLOBALS"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
@@ -19,7 +19,6 @@ RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
 COPY --chown=ubuntu:ubuntu malloc.patch ${WORKDIR}/malloc.patch
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 # Set up environment variables for StateAFL
@@ -36,8 +35,25 @@ RUN cd ${WORKDIR} && \
     make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+COPY --chown=ubuntu:ubuntu blacklist.sh ${WORKDIR}/blacklist.sh
+
+# The server runs in "/home/ubuntu" if login succeeds,
+# otherwise, the CWD is $TARGETDIR. Create a symlink to share the same files for MVP tree.
+RUN touch /home/ubuntu/.tree.mvp && \
+    chmod ugo+rw /home/ubuntu/.tree.mvp && \
+    ln /home/ubuntu/.tree.mvp ${WORKDIR}/proftpd-stateafl/.tree.mvp
+
+RUN touch /home/ubuntu/.tree.count.mvp && \
+    chmod ugo+rw /home/ubuntu/.tree.count.mvp && \
+    ln -s /home/ubuntu/.tree.count.mvp ${WORKDIR}/proftpd-stateafl/.tree.count.mvp
 
 # Switch default user to root
 USER root
 WORKDIR /home/ubuntu
 
+# For deterministic timestamps
+RUN apt -y install libfaketime
+
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+ENV FAKETIME="2000-01-01 11:12:13"
+ENV FAKETIME_ONLY_CMDS="proftpd"
