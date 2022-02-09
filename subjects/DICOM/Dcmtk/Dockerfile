@@ -99,6 +99,8 @@ COPY --chown=ubuntu:ubuntu dcmqrscp.cfg ${WORKDIR}/dcmqrscp.cfg
 COPY --chown=ubuntu:ubuntu in-dicom ${WORKDIR}/in-dicom
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/clean
+COPY --chown=ubuntu:ubuntu dicom.dic ${WORKDIR}/dcmtk/dcmdata/data/dicom.dic
 
 ENV DCMDICTPATH=${WORKDIR}/dcmtk/dcmdata/data/dicom.dic
 
