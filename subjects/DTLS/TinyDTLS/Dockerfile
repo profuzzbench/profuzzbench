@@ -65,7 +65,6 @@ RUN mkdir $WORKDIR
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 # Download and compile TinyDTLS for fuzzing
@@ -75,11 +74,8 @@ RUN cd $WORKDIR && \
     git checkout 06995d4 && \
     cd tests && \
     CC=afl-clang-fast make clean && \
-    CC=afl-clang-fast make ../libtinydtls.a $MAKE_OPT && \
-    CC=afl-clang-fast make $MAKE_OPT
-
-# Disable ASAN for better performance in coverage analysis
-env AFL_USE_ASAN=0
+    AFL_USE_ASAN=1 CC=afl-clang-fast make ../libtinydtls.a $MAKE_OPT && \
+    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 # Download and compile TinyDTLS for coverage analysis
 RUN cd $WORKDIR && \

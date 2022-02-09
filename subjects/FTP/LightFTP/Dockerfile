@@ -66,7 +66,6 @@ COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
 COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 # Download and compile LightFTP for fuzzing
@@ -76,11 +75,7 @@ RUN cd $WORKDIR && \
     git checkout 5980ea1 && \
     patch -p1 < ${WORKDIR}/fuzzing.patch && \
     cd Source/Release && \
-    CC=afl-clang-fast make clean all $MAKE_OPT
-
-# Disable ASAN for better performance in coverage analysis
-env AFL_USE_ASAN=0
-
+    AFL_USE_ASAN=1 CC=afl-clang-fast make clean all $MAKE_OPT
 
 # Set up LightFTP for fuzzing
 RUN cd ${WORKDIR}/LightFTP/Source/Release && \

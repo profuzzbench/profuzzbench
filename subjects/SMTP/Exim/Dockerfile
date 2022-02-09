@@ -78,7 +78,6 @@ COPY --chown=ubuntu:ubuntu exim-log-bug.patch ${WORKDIR}/exim-log-bug.patch
 COPY --chown=ubuntu:ubuntu exim.configure.patch ${WORKDIR}/exim.configure.patch
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 # Download, compile and install Exim for fuzzing
@@ -90,11 +89,7 @@ RUN cd ${WORKDIR} && \
     patch -p1 < ${WORKDIR}/exim-log-bug.patch && \
     cd src; mkdir Local; cp src/EDITME Local/Makefile && \
     cd Local; patch -p1 < ${WORKDIR}/exim.patch; cd .. && \
-    make CC=afl-clang-fast clean all install $MAKE_OPT
-
-# Disable ASAN for better performance in coverage analysis
-env AFL_USE_ASAN=0
-
+    AFL_USE_ASAN=1 make CC=afl-clang-fast clean all install $MAKE_OPT
 
 # Download and compile Exim for coverage analysis
 RUN cd ${WORKDIR} && \

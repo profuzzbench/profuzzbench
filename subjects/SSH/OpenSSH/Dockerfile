@@ -70,7 +70,6 @@ COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 COPY --chown=ubuntu:ubuntu rand.inc ${WORKDIR}/rand.inc
 
 # Set up environment variables for ASAN
-env AFL_USE_ASAN=1
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 
@@ -89,11 +88,8 @@ RUN cd ${WORKDIR} && \
     --with-privsep-path=$PWD/var-empty \
     --with-sandbox=no \
     --with-privsep-user=ubuntu && \
-    make $MAKE_OPT && \
+    AFL_USE_ASAN=1 make $MAKE_OPT && \
     make install
-
-# Disable ASAN for better performance in coverage analysis
-env AFL_USE_ASAN=0
 
 # Download and compile OpenSSH for coverage analysis
 RUN cd ${WORKDIR} && \
