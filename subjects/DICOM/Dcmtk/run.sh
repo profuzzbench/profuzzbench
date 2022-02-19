@@ -24,7 +24,7 @@ if $(strstr $FUZZER "afl"); then
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR/${TARGET_DIR}/build/bin
-  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dicom -o $OUTDIR -N tcp://127.0.0.1/5158 $OPTIONS ./dcmqrscp --single-process
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dicom -o $OUTDIR -N tcp://127.0.0.1/5158 $OPTIONS -c ${WORKDIR}/clean ./dcmqrscp --single-process
 
   STATUS=$?
 

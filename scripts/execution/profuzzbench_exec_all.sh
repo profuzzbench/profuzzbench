@@ -322,17 +322,17 @@ do
 
             if [[ $FUZZER == "aflnet" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh dcmtk $NUM_CONTAINERS results-dcmtk aflnet out-dcmtk-aflnet "-P DICOM -D 10000 -E -K -m none -c ${WORKDIR}/clean -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh dcmtk $NUM_CONTAINERS results-dcmtk aflnet out-dcmtk-aflnet "-P DICOM -D 10000 -E -K -m none -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "stateafl" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh dcmtk-stateafl $NUM_CONTAINERS results-dcmtk stateafl out-dcmtk-stateafl "-P DICOM -D 10000 -E -K -m none -c ${WORKDIR}/clean -u /home/ubuntu/experiments/dcmtk/build/bin/dcmqrscp -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh dcmtk-stateafl $NUM_CONTAINERS results-dcmtk stateafl out-dcmtk-stateafl "-P DICOM -D 10000 -E -K -m none -u /home/ubuntu/experiments/dcmtk/build/bin/dcmqrscp -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "aflnwe" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh dcmtk $NUM_CONTAINERS results-dcmtk aflnwe out-dcmtk-aflnwe "-D 10000 -K -m none -c ${WORKDIR}/clean -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh dcmtk $NUM_CONTAINERS results-dcmtk aflnwe out-dcmtk-aflnwe "-D 10000 -K -m none -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
             fi
 
         fi
