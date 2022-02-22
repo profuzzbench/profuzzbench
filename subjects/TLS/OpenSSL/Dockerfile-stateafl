@@ -30,9 +30,10 @@ RUN cd ${WORKDIR} && \
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 
 # For deterministic timestamps
+USER root
 RUN apt -y install libfaketime
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
 ENV FAKETIME="2000-01-01 11:12:13"
 ENV FAKETIME_ONLY_CMDS="openssl"
-
+USER ubuntu
