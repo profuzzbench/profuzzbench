@@ -1,6 +1,7 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 # Install common dependencies
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
     apt-get -y install sudo \ 
     apt-utils \
@@ -10,9 +11,10 @@ RUN apt-get -y update && \
     graphviz-dev \
     git \
     autoconf \
-    libgnutls-dev \
+    libgnutls28-dev \
     libssl-dev \
-    python-pip \
+    llvm \
+    python3-pip \
     nano \
     net-tools \
     vim \
@@ -35,9 +37,6 @@ WORKDIR /home/ubuntu
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
-
-# Download and compile AFLNet
-ENV LLVM_CONFIG="llvm-config-3.8"
 
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
@@ -106,4 +105,3 @@ RUN useradd -rm -d /home/fuzzing -s /bin/bash -g ubuntu -G sudo -u 1001 fuzzing 
 
 # For debugging purposes
 RUN apt-get -y install ftp
-

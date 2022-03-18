@@ -1,6 +1,7 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 # Install common dependencies
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
     apt-get -y install sudo \ 
     apt-utils \
@@ -10,9 +11,10 @@ RUN apt-get -y update && \
     graphviz-dev \
     git \
     autoconf \
-    libgnutls-dev \
+    libgnutls28-dev \
     libssl-dev \
-    python-pip \
+    llvm \
+    python3-pip \
     nano \
     net-tools \
     vim \
@@ -27,7 +29,7 @@ RUN groupadd ubuntu && \
 
 RUN chmod 777 /tmp
 
-RUN pip install gcovr==4.2
+RUN pip3 install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -35,9 +37,6 @@ WORKDIR /home/ubuntu
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
-
-# Download and compile AFLNet
-ENV LLVM_CONFIG="llvm-config-3.8"
 
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
@@ -114,4 +113,3 @@ COPY --chown=ubuntu:ubuntu smtp.dict ${WORKDIR}/smtp.dict
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
 COPY --chown=ubuntu:ubuntu clean.sh ${WORKDIR}/clean
-
