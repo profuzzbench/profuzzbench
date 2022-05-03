@@ -10,6 +10,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_GLOBALS -DENABLE_TRACE_GLOBAL_DATA -DBLACKLIST_
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
     make clean all $MAKE_OPT && \
+    rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
 
 # Set up environment variables for StateAFL
@@ -33,9 +34,14 @@ COPY --chown=ubuntu:ubuntu blacklist_global.sh ${WORKDIR}/blacklist_global.sh
 COPY --chown=ubuntu:ubuntu blacklist_alloc.sh ${WORKDIR}/blacklist_alloc.sh
 
 # For deterministic timestamps in email traffic
-RUN apt -y install libfaketime
+RUN cd ${WORKDIR} && \
+    git clone https://github.com/stateafl/libfaketime-asan-fixed libfaketime-asan-fixed && \
+    cd libfaketime-asan-fixed && \
+    git checkout 7e46ea4 && \
+    cd src && \
+    make
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+ENV LD_PRELOAD=$WORKDIR/libfaketime-asan-fixed/src/libfaketime.so.1
 ENV FAKETIME="2000-01-01 11:12:13"
 ENV FAKETIME_ONLY_CMDS="exim"
 

@@ -11,6 +11,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_ALLOC_SITES"
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
     CFLAGS="${REPLAYER_CFLAGS}" make clean all $MAKE_OPT && \
+    rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
 
 # Set up environment variables for StateAFL

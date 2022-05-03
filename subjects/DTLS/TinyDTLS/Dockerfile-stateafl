@@ -9,6 +9,7 @@ ENV STATEAFL="/home/ubuntu/stateafl"
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
     make clean all $MAKE_OPT && \
+    rm as && \
     cd llvm_mode && make $MAKE_OPT
 
 # Set up environment variables for StateAFL
