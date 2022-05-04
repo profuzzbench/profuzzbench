@@ -1,6 +1,7 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 # Install common dependencies
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
     apt-get -y install sudo \ 
     apt-utils \
@@ -10,9 +11,10 @@ RUN apt-get -y update && \
     graphviz-dev \
     git \
     autoconf \
-    libgnutls-dev \
+    libgnutls28-dev \
     libssl-dev \
-    python-pip \
+    llvm \
+    python3-pip \
     nano \
     net-tools \
     vim \
@@ -27,7 +29,7 @@ RUN groupadd ubuntu && \
 
 RUN chmod 777 /tmp
 
-RUN pip install gcovr==4.2
+RUN pip3 install gcovr==4.2
 
 # Use ubuntu as default username
 USER ubuntu
@@ -35,9 +37,6 @@ WORKDIR /home/ubuntu
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
-
-# Download and compile AFLNet
-ENV LLVM_CONFIG="llvm-config-3.8"
 
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
@@ -73,6 +72,18 @@ COPY --chown=ubuntu:ubuntu rand.inc ${WORKDIR}/rand.inc
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
 
+# Download and compile OpenSSL 1.0.2
+# (for compatibility with older OpenSSH used in this benchmark)
+RUN cd ${WORKDIR} && \
+    git clone https://github.com/openssl/openssl openssl && \
+    cd openssl && \
+    git checkout 12ad22d && \
+    ./Configure linux-x86_64-clang shared --prefix=$WORKDIR/openssl-install && \
+    make $MAKE_OPT && \
+    make install
+
+ENV LD_LIBRARY_PATH="${WORKDIR}/openssl-install/lib"
+
 # Download and compile OpenSSH for fuzzing
 RUN cd ${WORKDIR} && \
     git clone https://github.com/vegard/openssh-portable.git openssh && \
@@ -83,8 +94,10 @@ RUN cd ${WORKDIR} && \
     autoreconf && \
     ./configure \
     CC="afl-clang-fast" \
-    CFLAGS="-g -O3" \
+    CFLAGS="-g -O3 -I$WORKDIR/openssl-install/include" \
     --prefix=$PWD/install \
+    --with-openssl=$WORKDIR/openssl-install \
+    --with-ldflags="-L$WORKDIR/openssl-install/lib" \
     --with-privsep-path=$PWD/var-empty \
     --with-sandbox=no \
     --with-privsep-user=ubuntu && \
@@ -101,8 +114,10 @@ RUN cd ${WORKDIR} && \
     autoreconf && \
     ./configure \
     CC="gcc" \
-    CFLAGS="-g -O3 -fprofile-arcs -ftest-coverage" \
+    CFLAGS="-g -O3 -fprofile-arcs -ftest-coverage -I$WORKDIR/openssl-install/include" \
     LDFLAGS="-fprofile-arcs -ftest-coverage" \
+    --with-openssl=$WORKDIR/openssl-install \
+    --with-ldflags="-L$WORKDIR/openssl-install/lib" \
     --prefix=$PWD/install \
     --with-privsep-path=$PWD/var-empty \
     --with-sandbox=no \

@@ -30,6 +30,9 @@ RUN cd ${WORKDIR} && \
     CC=${STATEAFL}/afl-clang-fast \
     CFLAGS="-g -O3" \
     --prefix=$PWD/install \
+    --with-openssl=$WORKDIR/openssl-install \
+    CFLAGS="-I$WORKDIR/openssl-install/include" \
+    --with-ldflags="-L$WORKDIR/openssl-install/lib" \
     --with-privsep-path=$PWD/var-empty \
     --with-sandbox=no \
     --with-privsep-user=ubuntu && \
