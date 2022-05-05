@@ -69,7 +69,7 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 
 # Set up Bftpd for fuzzing
 RUN cd ${WORKDIR} && \
-    wget https://phoenixnap.dl.sourceforge.net/project/bftpd/bftpd/bftpd-5.7/bftpd-5.7.tar.gz && \
+    wget https://sourceforge.net/projects/bftpd/files/bftpd/bftpd-5.7/bftpd-5.7.tar.gz && \
     tar -zxvf bftpd-5.7.tar.gz && \
     cd bftpd && \
     patch -p1 < ${WORKDIR}/fuzzing.patch && \
