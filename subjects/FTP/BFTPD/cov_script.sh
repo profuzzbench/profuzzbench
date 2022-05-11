@@ -15,6 +15,17 @@ rm $covfile; touch $covfile
 #clear gcov data
 gcovr -r . -s -d > /dev/null 2>&1
 
+rm -rf /home/ubuntu/ftpshare/*
+
+mkdir /home/ubuntu/ftpshare/data
+chmod go+w /home/ubuntu/ftpshare/data
+
+mkdir -p /home/ubuntu/ftpshare/home/ubuntu/experiments/bftpd-gcov/
+chmod -R go+w /home/ubuntu/ftpshare/home
+
+cp $WORKDIR/basic.config $WORKDIR/basic.config.bak
+perl -p -i -e 's|AUTO_CHDIR="[^"]*"|AUTO_CHDIR="/data"|' ../basic.conf
+
 #output the header of the coverage file which is in the CSV format
 #Time: timestamp, l_per/b_per and l_abs/b_abs: line/branch coverage in percentage and absolutate number
 echo "Time,l_per,l_abs,b_per,b_abs" >> $covfile
@@ -35,6 +46,10 @@ for f in $(echo $folder/$testdir/*.raw); do
 
   #terminate running server(s)
   pkill bftpd
+
+  rm -rf /home/ubuntu/ftpshare/data/*
+  chown -R ubuntu:ubuntu /home/ubuntu/ftpshare/home
+  chmod -R go+w /home/ubuntu/ftpshare/home
 
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
   GCOV_PREFIX=/home/ubuntu/ftpshare timeout -k 0 3s ./bftpd -D -c ${WORKDIR}/basic.conf
@@ -57,6 +72,10 @@ for f in $(echo $folder/$testdir/id*); do
 
   #terminate running server(s)
   pkill bftpd
+
+  rm -rf /home/ubuntu/ftpshare/data/*
+  chown -R ubuntu:ubuntu /home/ubuntu/ftpshare/home
+  chmod -R go+w /home/ubuntu/ftpshare/home
   
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
   GCOV_PREFIX=/home/ubuntu/ftpshare timeout -k 0 3s ./bftpd -D -c ${WORKDIR}/basic.conf
@@ -87,3 +106,6 @@ then
   
   echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
 fi
+
+cp $WORKDIR/basic.config.bak $WORKDIR/basic.config
+

@@ -35,6 +35,9 @@ for f in $(echo $folder/$testdir/*.raw); do
 
   #terminate running server(s)
   pkill proftpd
+  rm /home/ubuntu/ftpshare/*
+  chown -R ubuntu:ubuntu /home/ubuntu/experiments/proftpd-gcov/{src,lib,modules}
+  chmod -R go+rw /home/ubuntu/experiments/proftpd-gcov/{src,lib,modules}
 
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
   timeout -k 0 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
@@ -56,7 +59,10 @@ for f in $(echo $folder/$testdir/id*); do
 
   #terminate running server(s)
   pkill proftpd
-  
+  rm /home/ubuntu/ftpshare/*
+  chown -R ubuntu:ubuntu /home/ubuntu/experiments/proftpd-gcov/{src,lib,modules}
+  chmod -R go+rw /home/ubuntu/experiments/proftpd-gcov/{src,lib,modules}
+ 
   $replayer $f FTP $pno 1 > /dev/null 2>&1 &
   timeout -k 0 3s ./proftpd -n -c ${WORKDIR}/basic.conf -X
 
