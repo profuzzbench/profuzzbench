@@ -10,6 +10,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_ALLOC_SITES"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     CFLAGS="${REPLAYER_CFLAGS}" make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -39,6 +40,7 @@ RUN cd ${WORKDIR} && \
     make $MAKE_OPT && \
     make install
 
+COPY --chown=ubuntu:ubuntu in-ssh-replay ${WORKDIR}/in-ssh-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 COPY --chown=ubuntu:ubuntu blacklist_alloc.sh ${WORKDIR}/blacklist_alloc.sh
 

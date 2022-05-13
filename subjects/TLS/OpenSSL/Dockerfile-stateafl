@@ -9,6 +9,7 @@ ENV STATEAFL_CFLAGS=""
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -28,6 +29,7 @@ RUN cd ${WORKDIR} && \
     CC=${STATEAFL}/afl-clang-fast make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
     CC=${STATEAFL}/afl-clang-fast make apps/openssl $MAKE_OPT
 
+COPY --chown=ubuntu:ubuntu in-tls-replay ${WORKDIR}/in-tls-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 
 # For deterministic timestamps

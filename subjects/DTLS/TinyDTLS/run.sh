@@ -19,11 +19,12 @@ if $(strstr $FUZZER "afl"); then
   fi
 
   TARGET_DIR=${TARGET_DIR:-"tinydtls"}
+  INPUTS=${INPUTS:-${WORKDIR}"/in-dtls"}
 
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR
-  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dtls -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./${TARGET_DIR}/tests/dtls-server
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./${TARGET_DIR}/tests/dtls-server
 
   STATUS=$?
 

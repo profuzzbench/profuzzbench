@@ -20,11 +20,12 @@ if $(strstr $FUZZER "afl"); then
   fi
 
   TARGET_DIR=${TARGET_DIR:-"dnsmasq"}
+  INPUTS=${INPUTS:-${WORKDIR}"/in-dns"}
 
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR/${TARGET_DIR}/src
-  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-dns -o $OUTDIR -N udp://127.0.0.1/5353 $OPTIONS ./dnsmasq
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/5353 $OPTIONS ./dnsmasq
 
   STATUS=$?
 

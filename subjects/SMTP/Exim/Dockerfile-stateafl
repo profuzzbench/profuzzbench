@@ -9,6 +9,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_GLOBALS -DENABLE_TRACE_GLOBAL_DATA -DBLACKLIST_
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -29,6 +30,7 @@ RUN cd ${WORKDIR} && \
     make CC=${STATEAFL}/afl-clang-fast clean all $MAKE_OPT
 
 
+COPY --chown=ubuntu:ubuntu in-smtp-replay ${WORKDIR}/in-smtp-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 COPY --chown=ubuntu:ubuntu blacklist_global.sh ${WORKDIR}/blacklist_global.sh
 COPY --chown=ubuntu:ubuntu blacklist_alloc.sh ${WORKDIR}/blacklist_alloc.sh

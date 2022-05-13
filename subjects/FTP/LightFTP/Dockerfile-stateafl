@@ -8,7 +8,8 @@ ENV STATEAFL="/home/ubuntu/stateafl"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
-    make clean all $MAKE_OPT && \
+    git checkout new-input && \
+    CFLAGS="-g -O0 -fsanitize=address" make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
 
@@ -31,5 +32,6 @@ RUN cd ${WORKDIR}/LightFTP-stateafl/Source/Release && \
     cp ${AFLNET}/tutorials/lightftp/fftp.conf ./ && \
     cp ${AFLNET}/tutorials/lightftp/ftpclean.sh ./
 
+COPY --chown=ubuntu:ubuntu in-ftp-replay ${WORKDIR}/in-ftp-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 

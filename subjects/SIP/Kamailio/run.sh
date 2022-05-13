@@ -20,6 +20,7 @@ if $(strstr $FUZZER "afl"); then
   fi
 
   TARGET_DIR=${TARGET_DIR:-"kamailio"}
+  INPUTS=${INPUTS:-${WORKDIR}"/in-sip"}
 
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
@@ -27,7 +28,7 @@ if $(strstr $FUZZER "afl"); then
   export KAMAILIO_RUNTIME_DIR=${WORKDIR}/${TARGET_DIR}/runtime_dir
   cd $WORKDIR
 
-  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${WORKDIR}/in-sip -o $OUTDIR -N udp://127.0.0.1/5060 $OPTIONS -c ${WORKDIR}/run_pjsip ./${TARGET_DIR}/src/kamailio -f ${WORKDIR}/kamailio-basic.cfg -L $KAMAILIO_MODULES -Y $KAMAILIO_RUNTIME_DIR -n 1 -D -E
+  timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/5060 $OPTIONS -c ${WORKDIR}/run_pjsip ./${TARGET_DIR}/src/kamailio -f ${WORKDIR}/kamailio-basic.cfg -L $KAMAILIO_MODULES -Y $KAMAILIO_RUNTIME_DIR -n 1 -D -E
 
   STATUS=$?
 

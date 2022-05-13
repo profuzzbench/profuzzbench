@@ -9,6 +9,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_ALLOC_SITES"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -18,6 +19,7 @@ ENV AFL_PATH=${STATEAFL}
 ENV PATH=${STATEAFL}:${PATH}
 
 COPY --chown=ubuntu:ubuntu buffer.patch ${WORKDIR}/buffer.patch
+COPY --chown=ubuntu:ubuntu in-dicom-replay ${WORKDIR}/in-dicom-replay
 
 # Dedicated instrumented version for StateAFL
 RUN cd $WORKDIR && \

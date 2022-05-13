@@ -13,6 +13,7 @@ ENV STATEAFL_CFLAGS="-DBLACKLIST_ALLOC_SITES"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -30,5 +31,6 @@ RUN cd $WORKDIR && \
     CC=${STATEAFL}/afl-clang-fast make MEMPKG=sys cfg && \
     CC=${STATEAFL}/afl-clang-fast make all $MAKE_OPT
 
+COPY --chown=ubuntu:ubuntu in-sip-replay ${WORKDIR}/in-sip-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 

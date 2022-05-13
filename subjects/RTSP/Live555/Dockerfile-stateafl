@@ -8,6 +8,7 @@ ENV STATEAFL="/home/ubuntu/stateafl"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && make $MAKE_OPT
@@ -29,5 +30,6 @@ RUN cd $WORKDIR && \
 RUN cd ${WORKDIR}/live555-stateafl/testProgs && \
     cp ${AFLNET}/tutorials/live555/sample_media_sources/*.* ./
 
+COPY --chown=ubuntu:ubuntu in-rtsp-replay ${WORKDIR}/in-rtsp-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
  

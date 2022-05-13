@@ -8,6 +8,7 @@ ENV STATEAFL="/home/ubuntu/stateafl"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && make $MAKE_OPT
@@ -24,5 +25,6 @@ RUN cd $WORKDIR && \
     patch -p1 < ${WORKDIR}/dnsmasq.patch && \
     CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
 
+COPY --chown=ubuntu:ubuntu in-dns-replay ${WORKDIR}/in-dns-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 

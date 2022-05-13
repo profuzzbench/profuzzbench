@@ -14,3 +14,4 @@ if [ $? -eq 0 ]; then
   echo "Black-listing alloc sites: ${BLACKLIST_ALLOC_SITES}"
 fi
 
+export INPUTS=${WORKDIR}/in-ssh-replay

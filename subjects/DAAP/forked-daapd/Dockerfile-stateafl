@@ -16,6 +16,7 @@ ENV TRACE_CUSTOM_SEND="evhttp_send_reply"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
+    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
@@ -35,5 +36,6 @@ RUN cd $WORKDIR && \
     make -C src/ SMARTPL2SQL.c SMARTPL.c DAAP2SQL.c DAAPLexer.c RSPLexer.c RSP2SQL.c && \
     make clean all $MAKE_OPT
 
+COPY --chown=ubuntu:ubuntu in-daap-replay ${WORKDIR}/in-daap-replay
 COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 
