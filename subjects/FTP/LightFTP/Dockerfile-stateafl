@@ -8,8 +8,7 @@ ENV STATEAFL="/home/ubuntu/stateafl"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
-    git checkout new-input && \
-    CFLAGS="-g -O0 -fsanitize=address" make clean all $MAKE_OPT && \
+    make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
 

@@ -16,7 +16,6 @@ ENV TRACE_CUSTOM_SEND="evhttp_send_reply"
 
 RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
     cd $STATEAFL && \
-    git checkout new-input && \
     make clean all $MAKE_OPT && \
     rm as && \
     cd llvm_mode && CFLAGS="${STATEAFL_CFLAGS}" make $MAKE_OPT
