@@ -224,7 +224,7 @@ do
 
             if [[ $FUZZER == "stateafl" ]] || [[ $FUZZER == "all" ]]
             then
-                profuzzbench_exec_common.sh kamailio-stateafl $NUM_CONTAINERS results-kamailio stateafl out-kamailio-stateafl "-m none -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K -u /home/ubuntu/experiments/kamailio/src/kamailio -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
+                profuzzbench_exec_common.sh kamailio-stateafl $NUM_CONTAINERS results-kamailio stateafl out-kamailio-stateafl "-m none -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K -u /home/ubuntu/experiments/kamailio/src/kamailio -U /home/ubuntu/experiments/kamailio/ -t ${TEST_TIMEOUT}" $TIMEOUT $SKIPCOUNT
             fi
 
             if [[ $FUZZER == "aflnwe" ]] || [[ $FUZZER == "all" ]]
