@@ -19,8 +19,8 @@ The following commands run 4 instances of AFLNet and 4 instances of AFLnwe to si
 cd $PFBENCH
 mkdir results-openssl
 
-profuzzbench_exec_common.sh openssl 4 results-openssl aflnet out-openssl-aflnet "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 3600 5 &
-profuzzbench_exec_common.sh openssl 4 results-openssl aflnwe out-openssl-aflnwe "-D 10000 -K -W 100" 3600 5
+profuzzbench_exec_common.sh openssl-profuzzbench 4 results-openssl aflnet out-openssl-aflnet "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 3600 5 &
+profuzzbench_exec_common.sh openssl-profuzzbench 4 results-openssl aflnwe out-openssl-aflnwe "-D 10000 -K -W 100" 3600 5
 ```
 
 ## Step-3. Collect the results
@@ -29,8 +29,8 @@ The following commands collect the  code coverage results produced by AFLNet and
 ```bash
 cd $PFBENCH/results-openssl
 
-profuzzbench_generate_csv.sh openssl 4 aflnet results.csv 0
-profuzzbench_generate_csv.sh openssl 4 aflnwe results.csv 1
+profuzzbench_generate_csv.sh openssl-profuzzbench 4 aflnet results.csv 0
+profuzzbench_generate_csv.sh openssl-profuzzbench 4 aflnwe results.csv 1
 ```
 
 ## Step-4. Analyze the results

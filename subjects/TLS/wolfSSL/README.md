@@ -1,9 +1,21 @@
 
 
+```
+export PATH="$PATH:/local-unsafe/mammann/profuzzbench/scripts/analysis:/local-unsafe/mammann/profuzzbench/scripts/execution"
+```
+
 ## StateAFL
 
+wolfSSL:
 ```
-docker build . -t wolfssl-profuzzbench && docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench && profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench 1 results-wolfssl-stateafl stateafl out-wolfssl-sateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
+mkdir results-wolfssl-stateafl
+docker build . -t wolfssl-profuzzbench && docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench && profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench 4 results-wolfssl-stateafl stateafl out-wolfssl-sateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
+```
+
+OpenSSL:
+```
+mkdir results-openssl-stateafl
+docker build . -t openssl-profuzzbench && docker build . -f Dockerfile-stateafl -t openssl-stateafl-profuzzbench && profuzzbench_exec_common.sh openssl-stateafl-profuzzbench 4 results-openssl-stateafl stateafl out-openssl-sateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
 ```
 
 ### Convert to aflnet-replay
@@ -16,8 +28,16 @@ aflnet-replay in-tls-replay/wolfssl13_2.stateafl.raw TLS 44333
 
 ## AFLNET
 
+wolfSSL:
 ```
+mkdir results-wolfssl
 docker build . -t wolfssl-profuzzbench && profuzzbench_exec_common.sh wolfssl-profuzzbench 4 results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 50400 5
+```
+
+OpenSSL:
+```
+mkdir results-openssl
+docker build . -t openssl-profuzzbench && profuzzbench_exec_common.sh openssl-profuzzbench 4 results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 50400 5
 ```
 
 ### Convert to afl-replay
@@ -27,7 +47,6 @@ https://github.com/aflnet/aflnet#step-1-prepare-message-sequences-as-seed-inputs
 #### wolfSSL compilation
 
 CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp --enable-debug && make 
-
 
 
 #### Server CLI
