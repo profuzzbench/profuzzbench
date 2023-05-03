@@ -30,7 +30,7 @@ RUN groupadd ubuntu && \
 
 RUN chmod 777 /tmp
 
-RUN pip3 install gcovr==5.2
+RUN pip3 install gcovr==6.0
 
 # Use ubuntu as default username
 USER ubuntu

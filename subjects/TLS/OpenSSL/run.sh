@@ -44,7 +44,8 @@ if $(strstr $FUZZER "afl"); then
   gcovr -r . -e ".*wolf.*" -e ".*test.*" -e ".*apps.*" -e ".*include.*" -e ".*engine.*" -e ".*fuzz.*" --html --html-details -o index.html
   mkdir ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
   cp *.html ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
-
+  cp *.css ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
+  
   #Step-3. Save the result to the ${WORKDIR} folder
   #Tar all results to a file
   cd ${WORKDIR}/${TARGET_DIR}

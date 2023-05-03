@@ -29,7 +29,7 @@ RUN groupadd ubuntu && \
 
 RUN chmod 777 /tmp
 
-RUN pip3 install gcovr==5.2
+RUN pip3 install gcovr==6.0
 
 # Use ubuntu as default username
 USER ubuntu
@@ -73,11 +73,10 @@ RUN cd ${WORKDIR} && \
     git clone https://github.com/openssl/openssl.git && \
     cd openssl && \
     cp ${WORKDIR}/*.pem ./ && \
-    git checkout 0437435a && \
+    git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
     CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    CC=afl-clang-fast make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
-    AFL_USE_ASAN=1 CC=afl-clang-fast make apps/openssl $MAKE_OPT
+    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 
 # Download and compile OpenSSL for coverage analysis
@@ -85,11 +84,10 @@ RUN cd ${WORKDIR} && \
     git clone https://github.com/openssl/openssl.git openssl-gcov && \
     cd openssl-gcov && \
     cp ${WORKDIR}/*.pem ./ && \
-    git checkout 0437435a && \
+    git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl $MAKE_OPT
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
 COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
