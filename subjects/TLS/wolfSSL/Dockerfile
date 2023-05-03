@@ -21,6 +21,7 @@ RUN apt-get -y update && \
     gdb \
     netcat \
     strace \
+    libtool \
     wget
 
 # Add a new user ubuntu, pass: ubuntu
@@ -61,35 +62,32 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
 
 RUN mkdir $WORKDIR
 
-COPY --chown=ubuntu:ubuntu key.pem ${WORKDIR}/key.pem
-COPY --chown=ubuntu:ubuntu cert.pem ${WORKDIR}/cert.pem
-COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
+#COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
-# Download and compile OpenSSL for fuzzing
+# Download and compile wolfSSL for fuzzing
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/openssl/openssl.git && \
-    cd openssl && \
-    cp ${WORKDIR}/*.pem ./ && \
-    git checkout 0437435a && \
-    patch -p1 < ${WORKDIR}/rand.patch && \
-    CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    CC=afl-clang-fast make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
-    AFL_USE_ASAN=1 CC=afl-clang-fast make apps/openssl $MAKE_OPT
+    git clone https://github.com/wolfSSL/wolfssl wolfssl
+RUN cd ${WORKDIR}/wolfssl && \
+    git checkout v5.3.0-stable && \
+#    patch -p1 < ${WORKDIR}/rand.patch && \
+    autoreconf --install && \
+    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" AFL_USE_ASAN=1 CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    make $MAKE_OPT
 
 
-# Download and compile OpenSSL for coverage analysis
+
+# Download and compile wolfSSL for coverage analysis
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/openssl/openssl.git openssl-gcov && \
-    cd openssl-gcov && \
-    cp ${WORKDIR}/*.pem ./ && \
-    git checkout 0437435a && \
-    patch -p1 < ${WORKDIR}/rand.patch && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make include/openssl/configuration.h include/openssl/opensslv.h include/crypto/bn_conf.h include/crypto/dso_conf.h && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make apps/openssl $MAKE_OPT
+    git clone https://github.com/wolfSSL/wolfssl wolfssl-gcov
+RUN cd ${WORKDIR}/wolfssl-gcov && \
+    git checkout v5.3.0-stable && \
+#    patch -p1 < ${WORKDIR}/rand.patch && \
+    autoreconf --install && \
+    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
 COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
