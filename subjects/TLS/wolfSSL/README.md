@@ -1,12 +1,44 @@
-examples/server/server -v 4 -p 44333 -x -d
-
-CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB" AFL_USE_ASAN=1 CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp --enable-debug && make 
- 
 
 
--? <num>    Help, print this usage
-            0: English, 1: Japanese
---help      Help, in English
+## StateAFL
+
+```
+docker build . -t wolfssl-profuzzbench && docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench && profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench 1 results-wolfssl-stateafl stateafl out-wolfssl-sateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
+```
+
+### Convert to aflnet-replay
+
+```
+nix-shell -p python310Packages.pyshark
+python3 convert-pcap-replay-format.py --input ~/wolfssl_2_wireshark.pcap --server-port 44333 --output in-tls-replay/wolfssl13_2.stateafl.raw
+aflnet-replay in-tls-replay/wolfssl13_2.stateafl.raw TLS 44333
+```
+
+## AFLNET
+
+```
+docker build . -t wolfssl-profuzzbench && profuzzbench_exec_common.sh wolfssl-profuzzbench 4 results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 50400 5
+```
+
+### Convert to afl-replay
+
+https://github.com/aflnet/aflnet#step-1-prepare-message-sequences-as-seed-inputs
+
+#### wolfSSL compilation
+
+CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp --enable-debug && make 
+
+
+
+#### Server CLI
+
+wolfSSL server:
+```
+examples/server/server -v 4 -x -d -p 44333
+```
+
+```
+
 -p <num>    Port to listen on, not 0, default 11111
 -v <num>    SSL version [0-4], SSLv3(0) - TLS1.3(4)), default 3
 -l <str>    Cipher suite list (: delimited)
@@ -47,16 +79,12 @@ CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB" AFL_USE_ASAN=1 CC=afl-clang-
             0: English, 1: Japanese
 -6          Simulate WANT_WRITE errors on every other IO send
 -7          Set minimum downgrade protocol version [0-4]  SSLv3(0) - TLS1.3(4)
-
-For simpler wolfSSL TLS server examples, visit
-https://github.com/wolfSSL/wolfssl-examples/tree/master/tls
+```
 
 
-ubuntu@b7fbd38a679a:~/experiments/wolfssl$ examples/client/client  --help
-wolfSSL Entering wolfSSL_Init
-wolfSSL Entering wolfCrypt_Init
-wolfSSL client 5.3.0 NOTE: All files relative to wolfSSL home dir
-Max RSA key size in bits for build is set at : 4096
+#### Client CLI
+
+```
 -? <num>    Help, print this usage
             0: English, 1: Japanese
 --help      Help, in English
@@ -98,6 +126,4 @@ Max RSA key size in bits for build is set at : 4096
 -2          Disable DH Prime check
 -6          Simulate WANT_WRITE errors on every other IO send
 -7          Set minimum downgrade protocol version [0-4]  SSLv3(0) - TLS1.3(4)
-
-For simpler wolfSSL TLS client examples, visit
-https://github.com/wolfSSL/wolfssl-examples/tree/master/tls
+```
