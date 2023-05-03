@@ -41,7 +41,7 @@ if $(strstr $FUZZER "afl"); then
     cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 4433 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 1
   fi
 
-  gcovr -r . --html --html-details -o index.html
+  gcovr -r . -e ".*wolf.*" -e ".*test.*" -e ".*apps.*" -e ".*include.*" -e ".*engine.*" -e ".*fuzz.*" --html --html-details -o index.html
   mkdir ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
   cp *.html ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
 
