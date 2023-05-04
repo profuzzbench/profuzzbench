@@ -72,9 +72,9 @@ RUN cd ${WORKDIR} && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl
 RUN cd ${WORKDIR}/wolfssl && \
     git checkout v5.3.0-stable && \
-#    patch -p1 < ${WORKDIR}/rand.patch && \
     autoreconf --install && \
-    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" AFL_USE_ASAN=1 CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    # FIXME AFL_USE_ASAN=1 
+    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
     make $MAKE_OPT
 
 
@@ -84,7 +84,6 @@ RUN cd ${WORKDIR} && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl-gcov
 RUN cd ${WORKDIR}/wolfssl-gcov && \
     git checkout v5.3.0-stable && \
-#    patch -p1 < ${WORKDIR}/rand.patch && \
     autoreconf --install && \
     CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
     make $MAKE_OPT

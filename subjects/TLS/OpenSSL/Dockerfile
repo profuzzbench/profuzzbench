@@ -76,7 +76,8 @@ RUN cd ${WORKDIR} && \
     git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
     CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
+    CC=afl-clang-fast make $MAKE_OPT
+#   FIXME AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 
 # Download and compile OpenSSL for coverage analysis
