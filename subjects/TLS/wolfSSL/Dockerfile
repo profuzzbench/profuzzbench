@@ -39,45 +39,18 @@ WORKDIR /home/ubuntu
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
 
-# Set up fuzzers
-RUN git clone https://github.com/profuzzbench/aflnet.git && \
-    cd aflnet && \
-    make clean all $MAKE_OPT && \
-    cd llvm_mode && make $MAKE_OPT
-
-RUN git clone https://github.com/profuzzbench/aflnwe.git && \
-    cd aflnwe && \
-    make clean all $MAKE_OPT && \
-    cd llvm_mode && make $MAKE_OPT
-
-# Set up environment variables for AFLNet
+# Set up environment variables
 ENV WORKDIR="/home/ubuntu/experiments"
-ENV AFLNET="/home/ubuntu/aflnet"
-ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}"
-ENV AFL_PATH="${AFLNET}"
+
+# Ignore that coredump collector is enabled
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
-
 RUN mkdir $WORKDIR
-
-#COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
-
-# Download and compile wolfSSL for fuzzing
-RUN cd ${WORKDIR} && \
-    git clone https://github.com/wolfSSL/wolfssl wolfssl
-RUN cd ${WORKDIR}/wolfssl && \
-    git checkout v5.3.0-stable && \
-    autoreconf --install && \
-    # FIXME AFL_USE_ASAN=1 
-    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
-    make $MAKE_OPT
-
-
 
 # Download and compile wolfSSL for coverage analysis
 RUN cd ${WORKDIR} && \
@@ -88,7 +61,7 @@ RUN cd ${WORKDIR}/wolfssl-gcov && \
     CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
     make $MAKE_OPT
 
-COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
-COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
+ENV PATH="${PATH}:${WORKDIR}"
+
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run

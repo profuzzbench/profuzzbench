@@ -16,6 +16,8 @@ WORKDIR="/home/ubuntu/experiments"
 #keep all container ids
 cids=()
 
+mkdir $SAVETO
+
 #create one container for each run
 for i in $(seq 1 $RUNS); do
   id=$(docker run --cpus=1 -d -it $DOCIMAGE /bin/bash -c "cd ${WORKDIR} && run ${FUZZER} ${OUTDIR} '${OPTIONS}' ${TIMEOUT} ${SKIPCOUNT}")

@@ -1,0 +1,27 @@
+FROM wolfssl-profuzzbench
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Set up fuzzers
+RUN git clone https://github.com/profuzzbench/aflnet.git && \
+    cd aflnet && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+ENV AFLNET="/home/ubuntu/aflnet"
+ENV AFL_PATH=${AFLNET}
+ENV PATH=${AFL_PATH}:${PATH}
+
+# Download and compile wolfSSL for fuzzing
+RUN cd ${WORKDIR} && \
+    git clone https://github.com/wolfSSL/wolfssl wolfssl
+RUN cd ${WORKDIR}/wolfssl && \
+    git checkout v5.3.0-stable && \
+    autoreconf --install && \
+    # FIXME AFL_USE_ASAN=1 
+    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
+COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict

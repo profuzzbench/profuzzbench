@@ -2,29 +2,60 @@
 
 ```
 export PATH="$PATH:/local-unsafe/mammann/profuzzbench/scripts/analysis:/local-unsafe/mammann/profuzzbench/scripts/execution"
+export PATH="$PATH:/home/max/profuzzbench/profuzzbench/scripts/analysis:/home/max/profuzzbench/scripts/execution"
 ```
 
+## Build
 
-export PATH="$PATH:/home/max/profuzzbench/profuzzbench/scripts/analysis:/home/max/profuzzbench/scripts/execution"
+```
+export MAKE_OPT="-j32"
+cd OpenSSL
+docker build . -t openssl-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-stateafl -t openssl-stateafl-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-aflnet -t openssl-aflnet-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-aflnwe -t openssl-aflnwe-profuzzbench --build-arg MAKE_OPT
 
+cd ..
+cd wolfSSL
+docker build . -t wolfssl-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-aflnet -t wolfssl-aflnet-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-aflnwe -t wolfssl-aflnwe-profuzzbench --build-arg MAKE_OPT
+cd ..
+```
 
-## StateAFL
+## Evaluation
+
+DO NOT USE -K WITH STATEAFL! The StateAFL instrumentation can not handle SIGTERMs!
+
+```
+export TIME=50400
+export INSTANCES=4
 
 wolfSSL:
 ```
-mkdir results-wolfssl-stateafl
-docker build . -t wolfssl-profuzzbench && docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench
-profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench 4 results-wolfssl-stateafl stateafl out-wolfssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
+# StateAFL
+profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench $INSTANCES results-wolfssl-stateafl stateafl out-wolfssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
+# ALFNet
+profuzzbench_exec_common.sh wolfssl-aflnet-profuzzbench $INSTANCES results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
+# AFLnwe
+profuzzbench_exec_common.sh wolfssl-aflnwe-profuzzbench $INSTANCES results-wolfssl-aflnwe aflnwe out-wolfssl-aflnwe "-D 10000 -W 100 -K -f .tmp_file" $TIME 5 &
 ```
 
 OpenSSL:
 ```
-mkdir results-openssl-stateafl
-docker build . -t openssl-profuzzbench && docker build . -f Dockerfile-stateafl -t openssl-stateafl-profuzzbench
-profuzzbench_exec_common.sh openssl-stateafl-profuzzbench 4 results-openssl-stateafl stateafl out-openssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -K -m none -t 1000" 50400 5
+# StateAFL
+profuzzbench_exec_common.sh openssl-stateafl-profuzzbench $INSTANCES results-openssl-stateafl stateafl out-openssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
+# AFLNet
+profuzzbench_exec_common.sh openssl-aflnet-profuzzbench $INSTANCES results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
+# AFLnwe
+profuzzbench_exec_common.sh openssl-aflnwe-profuzzbench $INSTANCES results-openssl-aflnwe aflnwe out-openssl-aflnwe "-D 10000 -W 100 -K -f .tmp_file" $TIME 5 &
 ```
 
-### Convert to aflnet-replay
+
+
+
+## Convert to aflnet-replay
 
 ```
 nix-shell -p python310Packages.pyshark
@@ -32,23 +63,7 @@ python3 convert-pcap-replay-format.py --input ~/wolfssl_2_wireshark.pcap --serve
 aflnet-replay in-tls-replay/wolfssl13_2.stateafl.raw TLS 44333
 ```
 
-## AFLNET
-
-wolfSSL:
-```
-mkdir results-wolfssl
-docker build . -t wolfssl-profuzzbench
-profuzzbench_exec_common.sh wolfssl-profuzzbench 4 results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 50400 5
-```
-
-OpenSSL:
-```
-mkdir results-openssl
-docker build . -t openssl-profuzzbench
-profuzzbench_exec_common.sh openssl-profuzzbench 4 results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100" 50400 5
-```
-
-### Convert to afl-replay
+## Convert to afl-replay
 
 https://github.com/aflnet/aflnet#step-1-prepare-message-sequences-as-seed-inputs
 
@@ -303,3 +318,8 @@ More crashes which randomly happen:
 #34 0x000000000046f778 in s_server_main (argc=<optimized out>, argv=<optimized out>) at apps/s_server.c:2233
 #35 0x000000000043c9b1 in do_cmd (prog=0xc677d0, argc=9, argv=0x7fffffffe840) at apps/openssl.c:491
 #36 0x000000000043c326 in main (argc=9, argv=0x7fffffffe840) at apps/openssl.c:303
+
+
+
+[-] PROGRAM ABORT : Short read from input file
+         Location : get_test_case(), afl-fuzz.c:468

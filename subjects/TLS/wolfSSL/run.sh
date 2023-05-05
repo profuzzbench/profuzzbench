@@ -49,7 +49,7 @@ if $(strstr $FUZZER "afl"); then
   #Step-3. Save the result to the ${WORKDIR} folder
   #Tar all results to a file
   cd ${WORKDIR}/${TARGET_DIR}
-  tar -zcvf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
+  tar -zcf ${WORKDIR}/${OUTDIR}.tar.gz ${OUTDIR}
 
   exit $STATUS
 fi

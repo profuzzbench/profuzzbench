@@ -1,0 +1,35 @@
+FROM wolfssl-profuzzbench
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+RUN git clone https://github.com/profuzzbench/aflnwe.git && \
+    cd aflnwe && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+# Include aflnet for afl-replay
+RUN git clone https://github.com/profuzzbench/aflnet.git && \
+    cd aflnet && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+ENV AFLNWE="/home/ubuntu/aflnwe"
+ENV AFL_PATH=${AFLNWE}
+ENV PATH=${AFL_PATH}:${PATH}
+
+RUN cd ${WORKDIR} && \
+    git clone https://github.com/wolfSSL/wolfssl wolfssl-aflnwe
+RUN cd ${WORKDIR}/wolfssl-aflnwe && \
+    git checkout v5.3.0-stable && \
+    autoreconf --install && \
+    # FIXME AFL_USE_ASAN=1 
+    CFLAGS=" -DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" CC=afl-clang-fast ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    CFLAGS=" -DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings" CC=afl-clang-fast make $MAKE_OPT
+
+ENV AFLNET="/home/ubuntu/aflnet"
+ENV PATH=${PATH}:$AFLNET
+
+COPY --chown=ubuntu:ubuntu run-aflnwe.sh ${WORKDIR}/run-aflnwe
+COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
+COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
