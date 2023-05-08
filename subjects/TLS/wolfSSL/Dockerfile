@@ -57,7 +57,7 @@ RUN cd ${WORKDIR} && \
     git clone --depth 1 --single-branch --branch v5.3.0-stable https://github.com/wolfSSL/wolfssl wolfssl-gcov
 RUN cd ${WORKDIR}/wolfssl-gcov && \
     autoreconf --install && \
-    CC="clang" CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g -O0 -fno-omit-frame-pointer -DHAVE_EX_DATA -DWOLFSSL_CALLBACKS -g -fPIC" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure "--disable-shared" "--enable-static" "--enable-debug" "--enable-opensslall" "--enable-opensslextra" "--enable-context-extra-user-data" "--enable-keygen" "--enable-certgen" "--enable-tls13" "--enable-dtls" "--enable-sp" "--enable-dtls-mtu" "--disable-sha3" "--enable-curve25519" "--enable-secure-renegotiation" "--enable-psk" "--disable-examples" "--enable-intelasm" "--enable-sp-asm" "--enable-aesni" "--enable-postauth" && \
+    CC="clang" CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g -O0 -fno-omit-frame-pointer -DHAVE_EX_DATA -DWOLFSSL_CALLBACKS -g -fPIC" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure "--disable-shared" "--enable-static" "--enable-debug" "--enable-opensslall" "--enable-opensslextra" "--enable-context-extra-user-data" "--enable-keygen" "--enable-certgen" "--enable-tls13" "--enable-dtls" "--enable-sp" "--enable-dtls-mtu" "--disable-sha3" "--enable-curve25519" "--enable-secure-renegotiation" "--enable-psk" "--enable-intelasm" "--enable-sp-asm" "--enable-aesni" "--enable-postauth" && \
     make $MAKE_OPT
 
 ENV PATH="${PATH}:${WORKDIR}"
