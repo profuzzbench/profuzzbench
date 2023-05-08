@@ -20,10 +20,9 @@ ENV PATH=${AFL_PATH}:${PATH}
 
 # AFLNWE
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/openssl/openssl.git openssl-aflnwe && \
+    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-aflnwe && \
     cd openssl-aflnwe && \
     cp ${WORKDIR}/*.pem ./ && \
-    git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
     CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
     CC=afl-clang-fast make $MAKE_OPT

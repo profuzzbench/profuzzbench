@@ -19,10 +19,9 @@ ENV PATH=${STATEAFL}:${PATH}
 
 # Dedicated instrumented version for StateAFL
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/openssl/openssl.git openssl-stateafl && \
+    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-stateafl && \
     cd openssl-stateafl && \
     cp ${WORKDIR}/*.pem ./ && \
-    git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
     CC=${STATEAFL}/afl-clang-fast ./config no-shared --with-rand-seed=none && \
     CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT

@@ -54,11 +54,10 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 
 # Download and compile wolfSSL for coverage analysis
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/wolfSSL/wolfssl wolfssl-gcov
+    git clone --depth 1 --single-branch --branch v5.3.0-stable https://github.com/wolfSSL/wolfssl wolfssl-gcov
 RUN cd ${WORKDIR}/wolfssl-gcov && \
-    git checkout v5.3.0-stable && \
     autoreconf --install && \
-    CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp && \
+    CC="clang" CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g -O0 -fno-omit-frame-pointer -DHAVE_EX_DATA -DWOLFSSL_CALLBACKS -g -fPIC" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure "--disable-shared" "--enable-static" "--enable-debug" "--enable-opensslall" "--enable-opensslextra" "--enable-context-extra-user-data" "--enable-keygen" "--enable-certgen" "--enable-tls13" "--enable-dtls" "--enable-sp" "--enable-dtls-mtu" "--disable-sha3" "--enable-curve25519" "--enable-secure-renegotiation" "--enable-psk" "--disable-examples" "--enable-intelasm" "--enable-sp-asm" "--enable-aesni" "--enable-postauth" && \
     make $MAKE_OPT
 
 ENV PATH="${PATH}:${WORKDIR}"

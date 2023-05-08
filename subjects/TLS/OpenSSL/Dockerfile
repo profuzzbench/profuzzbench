@@ -56,13 +56,12 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 
 # Download and compile OpenSSL for coverage analysis
 RUN cd ${WORKDIR} && \
-    git clone https://github.com/openssl/openssl.git openssl-gcov && \
+    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-gcov && \
     cd openssl-gcov && \
     cp ${WORKDIR}/*.pem ./ && \
-    git checkout OpenSSL_1_1_1j && \
     patch -p1 < ${WORKDIR}/rand.patch && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
+    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
+    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 ENV PATH="${PATH}:${WORKDIR}"
 
