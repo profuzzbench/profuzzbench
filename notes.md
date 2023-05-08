@@ -323,3 +323,52 @@ More crashes which randomly happen:
 
 [-] PROGRAM ABORT : Short read from input file
          Location : get_test_case(), afl-fuzz.c:468
+
+
+---
+
+
+```
+ID=1
+INPUT_RESULTS=results-openssl
+OUTPUT_RESULTS=redone-results-openssl-O0
+
+IMAGE="openssl-aflnet"
+FUZZER="aflnet"
+TARGET_DIR="openssl" # based on fuzzer
+OUTDIR="out-openssl"
+
+
+container=$(docker build results-openssl -q -f Dockerfile-coverage --build-arg IMAGE=$IMAGE --build-arg TARGET_DIR=$TARGET_DIR --build-arg INPUT=${OUTDIR}_$ID/$OUTDIR --build-arg OUTDIR=$OUTDIR)
+echo $container
+profuzzbench_exec_common.sh $container 1 $OUTPUT_RESULTS $FUZZER $OUTDIR "" 0 5 1
+```
+
+
+## Library Equivalence
+
+The max. lines for coverage should be the same for tlsanvil, tlspuffin and profuzzbench
+
+* Disable optimization -O0
+* Use clang everywhere
+* Use same clang version everywhere
+* Use same version of gcovr
+* Use same architecture
+* Use same config flags
+
+
+OpenSSL 1.1.1j: 108571 lines
+
+OpenSSL in profuzzbench (gcc) 17578/101862
+OpenSSL in profuzzbench with clang: x/108571  xx
+OpenSSL in tlspuffin: x/108929,108828 (108571, when deterministic, no-rand and claims are disabled)
+OpenSSL for tlsanvil:  x/y
+OpenSSL for coverage-test:  x/108571
+
+
+wolfSSL 5.3.0: 80860 lines
+
+wolfSSL in tlspuffin: x/80860,(80867, without the two randomness disabling -D flags)
+wolfSSL in profuzzbench with clang: x/80860
+wolfSSL in tlsanvil: x/41163
+wolfSSL in coverage-test-woflssl: 80860
