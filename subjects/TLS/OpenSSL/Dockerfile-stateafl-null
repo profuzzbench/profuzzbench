@@ -1,0 +1,3 @@
+FROM openssl-stateafl-profuzzbench
+
+COPY --chown=ubuntu:ubuntu in-tls-replay-null ${WORKDIR}/in-tls-replay

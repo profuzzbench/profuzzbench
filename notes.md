@@ -14,6 +14,7 @@ docker build . -t openssl-profuzzbench --build-arg MAKE_OPT
 docker build . -f Dockerfile-stateafl -t openssl-stateafl-profuzzbench --build-arg MAKE_OPT
 docker build . -f Dockerfile-aflnet -t openssl-aflnet-profuzzbench --build-arg MAKE_OPT
 docker build . -f Dockerfile-aflnwe -t openssl-aflnwe-profuzzbench --build-arg MAKE_OPT
+docker build . -f Dockerfile-stateafl-null -t openssl-stateafl-null-profuzzbench --build-arg MAKE_OPT
 
 cd ..
 cd wolfSSL
@@ -28,24 +29,25 @@ cd ..
 
 DO NOT USE -K WITH STATEAFL! The StateAFL instrumentation can not handle SIGTERMs!
 
-```
-export TIME=50400
-export INSTANCES=4
+```bash
+export TIME=86400
+export INSTANCES=10
 
-wolfSSL:
-```
+## wolfSSL
+
 # StateAFL
 profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench $INSTANCES results-wolfssl-stateafl stateafl out-wolfssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
 # ALFNet
 profuzzbench_exec_common.sh wolfssl-aflnet-profuzzbench $INSTANCES results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
 # AFLnwe
 profuzzbench_exec_common.sh wolfssl-aflnwe-profuzzbench $INSTANCES results-wolfssl-aflnwe aflnwe out-wolfssl-aflnwe "-D 10000 -W 100 -K -f .tmp_file" $TIME 5 &
-```
 
-OpenSSL:
-```
+## OpenSSL
+
 # StateAFL
 profuzzbench_exec_common.sh openssl-stateafl-profuzzbench $INSTANCES results-openssl-stateafl stateafl out-openssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
+# StateAFL (null cipher)
+profuzzbench_exec_common.sh openssl-stateafl-null-profuzzbench $INSTANCES results-openssl-stateafl-null stateafl out-openssl-stateafl-null "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
 # AFLNet
 profuzzbench_exec_common.sh openssl-aflnet-profuzzbench $INSTANCES results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
 # AFLnwe
