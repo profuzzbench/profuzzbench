@@ -31,7 +31,7 @@ if $(strstr $FUZZER "afl"); then
     echo "Skipping running fuzzing. Generating only coverage."
     STATUS=0
   else
-    timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -x ${WORKDIR}/tls.dict -o $OUTDIR -N tcp://127.0.0.1/4433 $OPTIONS ./examples/server/server -v 4 -p 4433 -x -d
+    timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -x ${WORKDIR}/tls.dict -o $OUTDIR -N tcp://127.0.0.1/4433 $OPTIONS ./examples/server/server -v d -p 4433 -x -d -7 3
     STATUS=$?
   fi
 

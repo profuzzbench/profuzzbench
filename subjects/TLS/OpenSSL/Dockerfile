@@ -60,7 +60,7 @@ RUN cd ${WORKDIR} && \
     cd openssl-gcov && \
     cp ${WORKDIR}/*.pem ./ && \
     patch -p1 < ${WORKDIR}/rand.patch && \
-    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared --with-rand-seed=none && \
+    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared enable-weak-ssl-ciphers --with-rand-seed=none -DOPENSSL_TLS_SECURITY_LEVEL=0 && \
     CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 ENV PATH="${PATH}:${WORKDIR}"
