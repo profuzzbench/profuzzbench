@@ -20,14 +20,15 @@ redo_coverage () {
     done
 }
 
-redo_coverage evaluation2-redo/results-openssl openssl-aflnet aflnet out-openssl openssl &
-#redo_coverage evaluation2-redo/results-openssl-aflnwe openssl-aflnwe aflnwe out-openssl-aflnwe openssl-aflnwe &
-redo_coverage evaluation2-redo/results-openssl-stateafl openssl-stateafl stateafl out-openssl-stateafl openssl-stateafl &
-redo_coverage evaluation2-redo/results-openssl-stateafl-null openssl-stateafl stateafl out-openssl-stateafl-null openssl-stateafl &
+mkdir redone-evaluation
 
+redo_coverage evaluation/results-openssl openssl-aflnet aflnet out-openssl openssl &
+redo_coverage evaluation/results-openssl-aflnwe openssl-aflnwe aflnwe out-openssl-aflnwe openssl-aflnwe &
+redo_coverage evaluation/results-openssl-stateafl openssl-stateafl stateafl out-openssl-stateafl openssl-stateafl &
+redo_coverage evaluation/results-openssl-stateafl-null openssl-stateafl stateafl out-openssl-stateafl-null openssl-stateafl &
 
-redo_coverage evaluation2-redo/results-wolfssl wolfssl-aflnet aflnet out-wolfssl wolfssl &
-#redo_coverage evaluation2-redo/results-wolfssl-aflnwe wolfssl-aflnwe aflnwe out-wolfssl-aflnwe wolfssl-aflnwe &
-redo_coverage evaluation2-redo/results-wolfssl-stateafl wolfssl-stateafl stateafl out-wolfssl-stateafl wolfssl-stateafl &
+redo_coverage evaluation/results-wolfssl wolfssl-aflnet aflnet out-wolfssl wolfssl &
+redo_coverage evaluation/results-wolfssl-aflnwe wolfssl-aflnwe aflnwe out-wolfssl-aflnwe wolfssl-aflnwe &
+redo_coverage evaluation/results-wolfssl-stateafl wolfssl-stateafl stateafl out-wolfssl-stateafl wolfssl-stateafl &
 
 wait
