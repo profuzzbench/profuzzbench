@@ -30,6 +30,7 @@ RUN groupadd ubuntu && \
 RUN chmod 777 /tmp
 
 RUN pip3 install gcovr==6.0
+RUN apt-get -y install jq
 
 # Use ubuntu as default username
 USER ubuntu
@@ -50,6 +51,8 @@ RUN mkdir $WORKDIR
 COPY --chown=ubuntu:ubuntu key.pem ${WORKDIR}/key.pem
 COPY --chown=ubuntu:ubuntu cert.pem ${WORKDIR}/cert.pem
 COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
+COPY --chown=ubuntu:ubuntu flush-exit.patch ${WORKDIR}/flush-exit.patch
+COPY --chown=ubuntu:ubuntu terminal-exit.patch ${WORKDIR}/terminal-exit.patch
 
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
@@ -59,7 +62,9 @@ RUN cd ${WORKDIR} && \
     git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-gcov && \
     cd openssl-gcov && \
     cp ${WORKDIR}/*.pem ./ && \
+    patch -p1 < ${WORKDIR}/flush-exit.patch && \
     patch -p1 < ${WORKDIR}/rand.patch && \
+    patch -p1 < ${WORKDIR}/terminal-exit.patch && \
     CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared enable-weak-ssl-ciphers --with-rand-seed=none -DOPENSSL_TLS_SECURITY_LEVEL=0 && \
     CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 

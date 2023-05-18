@@ -48,10 +48,13 @@ if $(strstr $FUZZER "afl"); then
     cov_script ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/ 4433 ${SKIPCOUNT} ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_over_time.csv 1
   fi
 
-  gcovr -j 32 --gcov-executable "llvm-cov gcov" -r . -e ".*openssl.*" -e ".*examples.*" -e ".*test.*" --html --html-details -o index.html
+  gcovr --gcov-executable "llvm-cov gcov" -r . -e ".*openssl.*" -e ".*examples.*" -e ".*test.*" --html --html-details -o index.html
   mkdir ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
   cp *.html ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
   cp *.css ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov_html/
+
+  gcovr --gcov-executable "llvm-cov gcov" -r . -e ".*openssl.*" -e ".*examples.*" -e ".*test.*" --cobertura ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov.cobertura
+  gcovr --gcov-executable "llvm-cov gcov" -r . -e ".*openssl.*" -e ".*examples.*" -e ".*test.*" --json ${WORKDIR}/${TARGET_DIR}/${OUTDIR}/cov.json
 
   #Step-3. Save the result to the ${WORKDIR} folder
   #Tar all results to a file

@@ -1,6 +1,6 @@
 ARG IMAGE
 
-FROM openssl-aflnet-profuzzbench
+FROM $IMAGE-profuzzbench
 
 ARG INPUT
 ARG OUTDIR

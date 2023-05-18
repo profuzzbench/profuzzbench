@@ -20,6 +20,7 @@ mkdir $SAVETO
 
 #create one container for each run
 for i in $(seq 1 $RUNS); do
+  # -e AFL_NO_FORKSRV=1, requires patching out kill()
   id=$(docker run -d -it $DOCIMAGE /bin/bash -c "cd ${WORKDIR} && run ${FUZZER} ${OUTDIR} '${OPTIONS}' ${TIMEOUT} ${SKIPCOUNT} ${ONLY_COVERAGE}")
   cids+=(${id::12}) #store only the first 12 characters of a container ID
 done

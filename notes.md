@@ -40,7 +40,7 @@ profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench $INSTANCES results-wol
 # ALFNet
 profuzzbench_exec_common.sh wolfssl-aflnet-profuzzbench $INSTANCES results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
 # AFLnwe
-profuzzbench_exec_common.sh wolfssl-aflnwe-profuzzbench $INSTANCES results-wolfssl-aflnwe aflnwe out-wolfssl-aflnwe "-D 10000 -W 100 -K -f .tmp_file" $TIME 5 &
+profuzzbench_exec_common.sh wolfssl-aflnwe-profuzzbench $INSTANCES results-wolfssl-aflnwe aflnwe out-wolfssl-aflnwe "-D 10000 -W 100 -K" $TIME 5 &
 
 ## OpenSSL
 
@@ -51,7 +51,7 @@ profuzzbench_exec_common.sh openssl-stateafl-null-profuzzbench $INSTANCES result
 # AFLNet
 profuzzbench_exec_common.sh openssl-aflnet-profuzzbench $INSTANCES results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
 # AFLnwe
-profuzzbench_exec_common.sh openssl-aflnwe-profuzzbench $INSTANCES results-openssl-aflnwe aflnwe out-openssl-aflnwe "-D 10000 -W 100 -K -f .tmp_file" $TIME 5 &
+profuzzbench_exec_common.sh openssl-aflnwe-profuzzbench $INSTANCES results-openssl-aflnwe aflnwe out-openssl-aflnwe "-D 10000 -W 100 -K" $TIME 5 &
 ```
 
 
@@ -333,13 +333,12 @@ More crashes which randomly happen:
 ```
 ID=1
 INPUT_RESULTS=results-openssl
-OUTPUT_RESULTS=redone-results-openssl-O0
+OUTPUT_RESULTS=redone-results-openssl
 
 IMAGE="openssl-aflnet"
 FUZZER="aflnet"
-TARGET_DIR="openssl" # based on fuzzer
 OUTDIR="out-openssl"
-
+TARGET_DIR="openssl" # based on fuzzer
 
 container=$(docker build results-openssl -q -f Dockerfile-coverage --build-arg IMAGE=$IMAGE --build-arg TARGET_DIR=$TARGET_DIR --build-arg INPUT=${OUTDIR}_$ID/$OUTDIR --build-arg OUTDIR=$OUTDIR)
 echo $container
@@ -374,3 +373,23 @@ wolfSSL in tlspuffin: x/80860,(80867, without the two randomness disabling -D fl
 wolfSSL in profuzzbench with clang: x/80860
 wolfSSL in tlsanvil: x/41163
 wolfSSL in coverage-test-woflssl: 80860
+
+
+
+
+evaluation-paper-2023/coverage.sh wolfssl530 /local-unsafe/mammann/2022-tlspuffin-evaluation-paper/evaluation-paper/*/experiments/*/corpus
+
+evaluation-paper-2023/coverage.sh wolfssl530 "/local-unsafe/mammann/tasks/taskc-tlspuffin/wolfssl/experiments/2023-05-11-161921-wolfssl-0/corpus
+
+
+
+#0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+#1  0x00007ffff7dec859 in __GI_abort () at abort.c:79
+#2  0x0000555555568196 in DFL_ck_alloc_nozero (size=4294967295) at alloc-inl.h:114
+#3  DFL_ck_alloc (size=4294967295) at alloc-inl.h:136
+#4  get_test_case (fsize=<optimized out>) at afl-fuzz.c:468
+#5  0x000055555556856f in send_over_network () at afl-fuzz.c:578
+#6  0x00005555555694cf in run_target (argv=0x7fffffffe980, timeout=40) at afl-fuzz.c:2687
+#7  0x000055555556d10f in common_fuzz_stuff (argv=0x7fffffffe980, out_buf=0x5555556b7258 "\026\003\001", len=<optimized out>) at afl-fuzz.c:4906
+#8  0x000055555556e902 in fuzz_one (argv=<optimized out>) at afl-fuzz.c:6774
+#9  0x0000555555559bb8 in main (argc=29, argv=<optimized out>) at afl-fuzz.c:8396
