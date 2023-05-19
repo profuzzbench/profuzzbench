@@ -19,9 +19,8 @@ RUN cd ${WORKDIR} && \
     cd openssl && \
     cp ${WORKDIR}/*.pem ./ && \
     patch -p1 < ${WORKDIR}/rand.patch && \
-    CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    CC=afl-clang-fast make $MAKE_OPT
-#   FIXME AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
+    AFL_USE_ASAN=0 CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
+    AFL_USE_ASAN=0 CC=afl-clang-fast make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
 COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict

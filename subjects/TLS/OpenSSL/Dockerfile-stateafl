@@ -23,8 +23,8 @@ RUN cd ${WORKDIR} && \
     cd openssl-stateafl && \
     cp ${WORKDIR}/*.pem ./ && \
     patch -p1 < ${WORKDIR}/rand.patch && \
-    CC=${STATEAFL}/afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
+    AFL_USE_ASAN=0 CC=${STATEAFL}/afl-clang-fast ./config no-shared --with-rand-seed=none && \
+    AFL_USE_ASAN=0 CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
 COPY --chown=ubuntu:ubuntu in-tls-replay ${WORKDIR}/in-tls-replay

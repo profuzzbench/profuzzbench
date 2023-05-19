@@ -1,79 +1,3 @@
-
-
-```
-export PATH="$PATH:/local-unsafe/mammann/profuzzbench/scripts/analysis:/local-unsafe/mammann/profuzzbench/scripts/execution"
-export PATH="$PATH:/home/max/profuzzbench/profuzzbench/scripts/analysis:/home/max/profuzzbench/scripts/execution"
-```
-
-## Build
-
-```
-export MAKE_OPT="-j32"
-cd OpenSSL
-docker build . -t openssl-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-stateafl -t openssl-stateafl-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-aflnet -t openssl-aflnet-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-aflnwe -t openssl-aflnwe-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-stateafl-null -t openssl-stateafl-null-profuzzbench --build-arg MAKE_OPT
-
-cd ..
-cd wolfSSL
-docker build . -t wolfssl-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-stateafl -t wolfssl-stateafl-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-aflnet -t wolfssl-aflnet-profuzzbench --build-arg MAKE_OPT
-docker build . -f Dockerfile-aflnwe -t wolfssl-aflnwe-profuzzbench --build-arg MAKE_OPT
-cd ..
-```
-
-## Evaluation
-
-DO NOT USE -K WITH STATEAFL! The StateAFL instrumentation can not handle SIGTERMs!
-
-```bash
-export TIME=86400
-export INSTANCES=10
-
-## wolfSSL
-
-# StateAFL
-profuzzbench_exec_common.sh wolfssl-stateafl-profuzzbench $INSTANCES results-wolfssl-stateafl stateafl out-wolfssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
-# ALFNet
-profuzzbench_exec_common.sh wolfssl-aflnet-profuzzbench $INSTANCES results-wolfssl aflnet out-wolfssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
-# AFLnwe
-profuzzbench_exec_common.sh wolfssl-aflnwe-profuzzbench $INSTANCES results-wolfssl-aflnwe aflnwe out-wolfssl-aflnwe "-D 10000 -W 100 -K" $TIME 5 &
-
-## OpenSSL
-
-# StateAFL
-profuzzbench_exec_common.sh openssl-stateafl-profuzzbench $INSTANCES results-openssl-stateafl stateafl out-openssl-stateafl "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
-# StateAFL (null cipher)
-profuzzbench_exec_common.sh openssl-stateafl-null-profuzzbench $INSTANCES results-openssl-stateafl-null stateafl out-openssl-stateafl-null "-P TLS -D 10000 -q 3 -s 3 -E -m none -t 1000" $TIME 5 &
-# AFLNet
-profuzzbench_exec_common.sh openssl-aflnet-profuzzbench $INSTANCES results-openssl aflnet out-openssl "-P TLS -D 10000 -q 3 -s 3 -E -R -W 100 -m none -K" $TIME 5 &
-# AFLnwe
-profuzzbench_exec_common.sh openssl-aflnwe-profuzzbench $INSTANCES results-openssl-aflnwe aflnwe out-openssl-aflnwe "-D 10000 -W 100 -K" $TIME 5 &
-```
-
-
-
-
-## Convert to aflnet-replay
-
-```
-nix-shell -p python310Packages.pyshark
-python3 convert-pcap-replay-format.py --input ~/wolfssl_2_wireshark.pcap --server-port 44333 --output in-tls-replay/wolfssl13_2.stateafl.raw
-aflnet-replay in-tls-replay/wolfssl13_2.stateafl.raw TLS 44333
-```
-
-## Convert to afl-replay
-
-https://github.com/aflnet/aflnet#step-1-prepare-message-sequences-as-seed-inputs
-
-#### wolfSSL compilation
-
-CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB" ./configure --disable-shared --enable-static --enable-tls13 --enable-session-ticket --enable-sp --enable-debug && make 
-
-
 #### Server CLI
 
 wolfSSL server:
@@ -81,13 +5,13 @@ wolfSSL server:
 examples/server/server -v 4 -x -d -p 44333
 ```
 
-
+openSSL server:
 ```
 ./apps/openssl s_server -key key.pem -cert cert.pem -port 12345
 ```
 
+wolfSSL options:
 ```
-
 -p <num>    Port to listen on, not 0, default 11111
 -v <num>    SSL version [0-4], SSLv3(0) - TLS1.3(4)), default 3
 -l <str>    Cipher suite list (: delimited)
@@ -133,6 +57,7 @@ examples/server/server -v 4 -x -d -p 44333
 
 #### Client CLI
 
+wolfSSL options:
 ```
 -? <num>    Help, print this usage
             0: English, 1: Japanese
@@ -177,22 +102,16 @@ examples/server/server -v 4 -x -d -p 44333
 -7          Set minimum downgrade protocol version [0-4]  SSLv3(0) - TLS1.3(4)
 ```
 
+## AFLNet Cli options
 
-
-
-aflnet 
-
-afl-fuzz 2.56b by <lcamtuf@google.com>
-
+```
 aflnet/afl-fuzz [ options ] -- /path/to/fuzzed_app [ ... ]
 
 Required parameters:
-
   -i dir        - input directory with test cases
   -o dir        - output directory for fuzzer findings
 
 Execution control settings:
-
   -f file       - location read by the fuzzed program (stdin)
   -t msec       - timeout for each run (auto-scaled, 50-1000 ms)
   -m megs       - memory limit for child process (50 MB)
@@ -224,36 +143,46 @@ Other stuff:
   -T text       - text banner to show on the screen
   -M / -S id    - distributed mode (see parallel_fuzzing.txt)
   -C            - crash exploration mode (the peruvian rabbit thing)
+```
+
+## Library Equivalence
+
+The max. lines for coverage should be the same for tlsanvil, tlspuffin and profuzzbench
+
+* Disable optimization -O0
+* Use clang everywhere
+* Use same clang version everywhere
+* Use same version of gcovr
+* Use same architecture
+* Use same config flags
 
 
+# Observed crashes
 
+AFLnwe race condition without -f flag:
+```
+[-] PROGRAM ABORT : Short read from input file
+         Location : get_test_case(), afl-fuzz.c:468
+```
 
-/home/ubuntu/aflnet/afl-fuzz -d -i ../in-tls -N tcp://127.0.0.1/4433 -P TLS -D 10000 -q 3 -s 3 -E -K -R -W 100 -o test-out -- ./apps/openssl s_server -key key.pem -cert cert.pem -4 -naccept 1 -no_anti_replay
+race condition with -f flag:
 
-
-docker run -ti  --entrypoint=/bin/bash openssl-profuzzbench
-
-
-[-] Whoops, the target binary crashed suddenly, before receiving any input
-    from the fuzzer! Since it seems to be built with ASAN and you have a
-    restrictive memory limit configured, this is expected; please read
-    docs/notes_for_asan.txt for help.
-
-[-] PROGRAM ABORT : Fork server crashed with signal 6
-         Location : init_forkserver(), afl-fuzz.c:3064
-
+```
 #0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
-#1  0x00007ffff7c55859 in __GI_abort () at abort.c:79
-#2  0x00000000004b33c7 in __sanitizer::Abort() ()
-#3  0x000000000049dcc4 in __asan::ReserveShadowMemoryRange(unsigned long, unsigned long, char const*) ()
-#4  0x000000000049dd74 in __asan::InitializeShadowMemory() ()
-#5  0x000000000049d4b7 in __asan::AsanInitInternal() ()
-#6  0x00007ffff7fe0cf6 in _dl_init (main_map=0x7ffff7ffe190, argc=10, argv=0x7fffffffe3c8, env=0x7fffffffe420) at dl-init.c:104
-#7  0x00007ffff7fd013a in _dl_start_user () from /lib64/ld-linux-x86-64.so.2
+#1  0x00007ffff7dec859 in __GI_abort () at abort.c:79
+#2  0x0000555555568196 in DFL_ck_alloc_nozero (size=4294967295) at alloc-inl.h:114
+#3  DFL_ck_alloc (size=4294967295) at alloc-inl.h:136
+#4  get_test_case (fsize=<optimized out>) at afl-fuzz.c:468
+#5  0x000055555556856f in send_over_network () at afl-fuzz.c:578
+#6  0x00005555555694cf in run_target (argv=0x7fffffffe980, timeout=40) at afl-fuzz.c:2687
+#7  0x000055555556d10f in common_fuzz_stuff (argv=0x7fffffffe980, out_buf=0x5555556b7258 "\026\003\001", len=<optimized out>) at afl-fuzz.c:4906
+#8  0x000055555556e902 in fuzz_one (argv=<optimized out>) at afl-fuzz.c:6774
+#9  0x0000555555559bb8 in main (argc=29, argv=<optimized out>) at afl-fuzz.c:8396
+```
 
 
-
-
+StateAFL -K flag:
+```
 #0  0x0000000000925822 in map_delete_balance ()
 #1  0x000000000092526d in map_remove_element ()
 #2  0x00000000009254e8 in map_destroy ()
@@ -262,24 +191,11 @@ docker run -ti  --entrypoint=/bin/bash openssl-profuzzbench
 #5  0x00007ffff7dd28a7 in __run_exit_handlers (status=0, listp=0x7ffff7f78718 <__exit_funcs>, run_list_atexit=run_list_atexit@entry=true, run_dtors=run_dtors@entry=true) at exit.c:108
 #6  0x00007ffff7dd2a60 in __GI_exit (status=<optimized out>) at exit.c:139
 #7  0x0000000000922d77 in tracer_signal_handler (signum=15) at afl-llvm-rt-state-tracer.o.c:319
+```
 
 
 
-# wolSSL 5.3.0 crashes
-
-signal 6 -> oom
-
-## OpenSSL 1.1.1j crashes
-
-1. OpenSSL version
-2. Make commands (binary size?)
-
-runs from 03-05 -> investigate-wolfssl,investigate-openssl-stateafl containers
- openssl[3626375]: segfault at 0 ip 0000000000925822 sp 00007fffffff9bf0 error 4 in openssl[404000+536000]
-
-
-More crashes which randomly happen:
-
+```
 #0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
 #1  0x00007ffff7d94859 in __GI_abort () at abort.c:79
 #2  0x00007ffff7e072da in __malloc_assert (
@@ -320,76 +236,4 @@ More crashes which randomly happen:
 #34 0x000000000046f778 in s_server_main (argc=<optimized out>, argv=<optimized out>) at apps/s_server.c:2233
 #35 0x000000000043c9b1 in do_cmd (prog=0xc677d0, argc=9, argv=0x7fffffffe840) at apps/openssl.c:491
 #36 0x000000000043c326 in main (argc=9, argv=0x7fffffffe840) at apps/openssl.c:303
-
-
-
-[-] PROGRAM ABORT : Short read from input file
-         Location : get_test_case(), afl-fuzz.c:468
-
-
----
-
-
 ```
-ID=1
-INPUT_RESULTS=results-openssl
-OUTPUT_RESULTS=redone-results-openssl
-
-IMAGE="openssl-aflnet"
-FUZZER="aflnet"
-OUTDIR="out-openssl"
-TARGET_DIR="openssl" # based on fuzzer
-
-container=$(docker build results-openssl -q -f Dockerfile-coverage --build-arg IMAGE=$IMAGE --build-arg TARGET_DIR=$TARGET_DIR --build-arg INPUT=${OUTDIR}_$ID/$OUTDIR --build-arg OUTDIR=$OUTDIR)
-echo $container
-profuzzbench_exec_common.sh $container 1 $OUTPUT_RESULTS $FUZZER $OUTDIR "" 0 5 1
-```
-
-
-## Library Equivalence
-
-The max. lines for coverage should be the same for tlsanvil, tlspuffin and profuzzbench
-
-* Disable optimization -O0
-* Use clang everywhere
-* Use same clang version everywhere
-* Use same version of gcovr
-* Use same architecture
-* Use same config flags
-
-
-OpenSSL 1.1.1j: 108571 lines
-
-OpenSSL in profuzzbench (gcc) 17578/101862
-OpenSSL in profuzzbench with clang: x/108571  xx
-OpenSSL in tlspuffin: x/108929,108828 (108571, when deterministic, no-rand and claims are disabled)
-OpenSSL for tlsanvil:  x/y
-OpenSSL for coverage-test:  x/108571
-
-
-wolfSSL 5.3.0: 80860 lines
-
-wolfSSL in tlspuffin: x/80860,(80867, without the two randomness disabling -D flags)
-wolfSSL in profuzzbench with clang: x/80860
-wolfSSL in tlsanvil: x/41163
-wolfSSL in coverage-test-woflssl: 80860
-
-
-
-
-evaluation-paper-2023/coverage.sh wolfssl530 /local-unsafe/mammann/2022-tlspuffin-evaluation-paper/evaluation-paper/*/experiments/*/corpus
-
-evaluation-paper-2023/coverage.sh wolfssl530 "/local-unsafe/mammann/tasks/taskc-tlspuffin/wolfssl/experiments/2023-05-11-161921-wolfssl-0/corpus
-
-
-
-#0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
-#1  0x00007ffff7dec859 in __GI_abort () at abort.c:79
-#2  0x0000555555568196 in DFL_ck_alloc_nozero (size=4294967295) at alloc-inl.h:114
-#3  DFL_ck_alloc (size=4294967295) at alloc-inl.h:136
-#4  get_test_case (fsize=<optimized out>) at afl-fuzz.c:468
-#5  0x000055555556856f in send_over_network () at afl-fuzz.c:578
-#6  0x00005555555694cf in run_target (argv=0x7fffffffe980, timeout=40) at afl-fuzz.c:2687
-#7  0x000055555556d10f in common_fuzz_stuff (argv=0x7fffffffe980, out_buf=0x5555556b7258 "\026\003\001", len=<optimized out>) at afl-fuzz.c:4906
-#8  0x000055555556e902 in fuzz_one (argv=<optimized out>) at afl-fuzz.c:6774
-#9  0x0000555555559bb8 in main (argc=29, argv=<optimized out>) at afl-fuzz.c:8396
