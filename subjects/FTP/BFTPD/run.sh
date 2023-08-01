@@ -14,13 +14,15 @@ strstr() {
 #Commands for afl-based fuzzers (e.g., aflnet, aflnwe)
 if $(strstr $FUZZER "afl"); then
 
-  # Run fuzzer-specific commands (if any)
-  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
-    source ${WORKDIR}/run-${FUZZER}
-  fi
+
 
   TARGET_DIR=${TARGET_DIR:-"bftpd"}
   INPUTS=${INPUTS-${WORKDIR}"/in-ftp"}
+  
+    # Run fuzzer-specific commands (if any)
+  if [ -e ${WORKDIR}/run-${FUZZER} ]; then
+    source ${WORKDIR}/run-${FUZZER}
+  fi
 
   #Step-1. Do Fuzzing
   #Move to fuzzing folder

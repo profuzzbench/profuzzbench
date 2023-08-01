@@ -23,6 +23,13 @@ RUN apt-get -y update && \
     strace \
     wget
 
+RUN apt-get install -y tcpdump
+RUN apt install -y tshark 
+RUN apt-get install bsdmainutils 
+RUN apt-get install -y libgraph-easy-perl 
+RUN pip install pandas
+RUN pip install pyshark
+
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
     useradd -rm -d /home/ubuntu -s /bin/bash -g ubuntu -G sudo -u 1000 ubuntu -p "$(openssl passwd -1 ubuntu)"
