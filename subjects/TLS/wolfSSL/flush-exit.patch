@@ -1,0 +1,23 @@
+diff --git a/examples/server/server.c b/examples/server/server.c
+index 3f18379..10b5b44 100644
+--- a/examples/server/server.c
++++ b/examples/server/server.c
+@@ -3425,9 +3425,18 @@ exit:
+
+ /* so overall tests can pull in test function */
+ #ifndef NO_MAIN_DRIVER
+-
++void __gcov_flush();
++
++void gcov_handler(int signum) {
++  if (signum == SIGTERM) {
++    printf("Flushing gcov\n");
++    __gcov_flush();
++  exit(0);
++  }
++}
+     int main(int argc, char** argv)
+     {
++        signal(SIGTERM, gcov_handler);
+         func_args args;
+         tcp_ready ready;

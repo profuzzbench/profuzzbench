@@ -1,0 +1,24 @@
+diff --git a/apps/openssl.c b/apps/openssl.c
+index ff7b759a..b6b0f75a 100644
+--- a/apps/openssl.c
++++ b/apps/openssl.c
+@@ -116,8 +116,19 @@ static char *make_config_name(void)
+     return p;
+ }
+
++void __gcov_flush();
++
++void gcov_handler(int signum) {
++  if (signum == SIGTERM) {
++    printf("Flushing gcov\n");
++    __gcov_flush();
++    exit(0);
++  }
++}
++
+ int main(int argc, char *argv[])
+ {
++    signal(SIGTERM, gcov_handler);
+     FUNCTION f, *fp;
+     LHASH_OF(FUNCTION) *prog = NULL;
+     char **copied_argv = NULL;

@@ -21,6 +21,7 @@ RUN apt-get -y update && \
     gdb \
     netcat \
     strace \
+    libtool \
     wget
 
 # Add a new user ubuntu, pass: ubuntu
@@ -39,34 +40,29 @@ WORKDIR /home/ubuntu
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
 
-# Set up environment variables for AFLNet
+# Set up environment variables
 ENV WORKDIR="/home/ubuntu/experiments"
 
+# Ignore that coredump collector is enabled
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
     AFL_SKIP_CPUFREQ=1 \
     AFL_NO_AFFINITY=1
 
 RUN mkdir $WORKDIR
 
-COPY --chown=ubuntu:ubuntu key.pem ${WORKDIR}/key.pem
-COPY --chown=ubuntu:ubuntu cert.pem ${WORKDIR}/cert.pem
-COPY --chown=ubuntu:ubuntu rand.patch ${WORKDIR}/rand.patch
 COPY --chown=ubuntu:ubuntu flush-exit.patch ${WORKDIR}/flush-exit.patch
-COPY --chown=ubuntu:ubuntu terminal-exit.patch ${WORKDIR}/terminal-exit.patch
 
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
-# Download and compile OpenSSL for coverage analysis
+# Download and compile wolfSSL for coverage analysis
 RUN cd ${WORKDIR} && \
-    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-gcov && \
-    cd openssl-gcov && \
-    cp ${WORKDIR}/*.pem ./ && \
+    git clone --depth 1 --single-branch --branch v5.3.0-stable https://github.com/wolfSSL/wolfssl wolfssl-gcov
+RUN cd ${WORKDIR}/wolfssl-gcov && \
+    autoreconf --install && \
     patch -p1 < ${WORKDIR}/flush-exit.patch && \
-    patch -p1 < ${WORKDIR}/rand.patch && \
-    patch -p1 < ${WORKDIR}/terminal-exit.patch && \
-    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared enable-weak-ssl-ciphers --with-rand-seed=none -DOPENSSL_TLS_SECURITY_LEVEL=0 && \
-    CC="clang" CFLAGS="-fprofile-arcs -ftest-coverage -O0" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
+    CC="clang" CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -fprofile-arcs -ftest-coverage -w -g -O0 -fno-omit-frame-pointer -DHAVE_EX_DATA -DWOLFSSL_CALLBACKS -g -fPIC" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure "--disable-shared" "--enable-static" "--enable-debug" "--enable-opensslall" "--enable-opensslextra" "--enable-context-extra-user-data" "--enable-keygen" "--enable-certgen" "--enable-tls13" "--enable-dtls" "--enable-sp" "--enable-dtls-mtu" "--disable-sha3" "--enable-curve25519" "--enable-secure-renegotiation" "--enable-psk" "--enable-intelasm" "--enable-sp-asm" "--enable-aesni" "--enable-postauth" && \
+    make $MAKE_OPT
 
 ENV PATH="${PATH}:${WORKDIR}"
 

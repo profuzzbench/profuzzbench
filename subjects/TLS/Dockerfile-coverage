@@ -1,0 +1,10 @@
+ARG IMAGE
+
+FROM $IMAGE-profuzzbench
+
+ARG INPUT
+ARG OUTDIR
+ARG TARGET_DIR
+
+
+COPY --chown=ubuntu:ubuntu $INPUT ${WORKDIR}/${TARGET_DIR}/${OUTDIR}

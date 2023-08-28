@@ -1,7 +1,0 @@
-USER fuzzing
-PASS fuzzing
-EPSV
-LIST
-STAT
-QUIT
-

@@ -1,0 +1,39 @@
+FROM openssl-profuzzbench
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+RUN git clone https://github.com/trail-of-forks/aflnwe.git && \
+    cd aflnwe && \
+    git checkout a9a3eca64c6ff4fde84395916010904c09872e6d && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+# Include aflnet for afl-replay
+RUN git clone https://github.com/profuzzbench/aflnet.git && \
+    cd aflnet && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+ENV AFLNWE="/home/ubuntu/aflnwe"
+ENV AFL_PATH=${AFLNWE}
+ENV PATH=${AFL_PATH}:${PATH}
+
+COPY --chown=ubuntu:ubuntu terminal-exit.patch ${WORKDIR}/terminal-exit.patch
+
+# AFLNWE
+RUN cd ${WORKDIR} && \
+    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-aflnwe && \
+    cd openssl-aflnwe && \
+    cp ${WORKDIR}/*.pem ./ && \
+    patch -p1 < ${WORKDIR}/rand.patch && \
+    patch -p1 < ${WORKDIR}/terminal-exit.patch && \
+    AFL_USE_ASAN=0 CC=afl-clang-fast ./config no-shared --with-rand-seed=none && \
+    AFL_USE_ASAN=0 CC=afl-clang-fast make $MAKE_OPT
+
+ENV AFLNET="/home/ubuntu/aflnet"
+ENV PATH=${PATH}:$AFLNET
+
+COPY --chown=ubuntu:ubuntu run-aflnwe.sh ${WORKDIR}/run-aflnwe
+COPY --chown=ubuntu:ubuntu in-tls ${WORKDIR}/in-tls
+COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict

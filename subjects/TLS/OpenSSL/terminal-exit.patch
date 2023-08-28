@@ -1,0 +1,12 @@
+diff --git a/apps/s_server.c b/apps/s_server.c
+index 0ba75999..30dce3af 100644
+--- a/apps/s_server.c
++++ b/apps/s_server.c
+@@ -2462,7 +2462,7 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
+             if (FD_ISSET(s, &readfds))
+                 read_from_sslcon = 1;
+         }
+-        if (read_from_terminal) {
++        if (0&& read_from_terminal) {
+             if (s_crlf) {
+                 int j, lf_num;

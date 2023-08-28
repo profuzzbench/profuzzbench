@@ -1,4 +1,4 @@
-FROM openssl-profuzzbench
+FROM wolfssl-profuzzbench
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
@@ -19,12 +19,11 @@ ENV PATH=${STATEAFL}:${PATH}
 
 # Dedicated instrumented version for StateAFL
 RUN cd ${WORKDIR} && \
-    git clone --depth 1 --single-branch --branch OpenSSL_1_1_1j https://github.com/openssl/openssl.git openssl-stateafl && \
-    cd openssl-stateafl && \
-    cp ${WORKDIR}/*.pem ./ && \
-    patch -p1 < ${WORKDIR}/rand.patch && \
-    AFL_USE_ASAN=0 CC=${STATEAFL}/afl-clang-fast ./config no-shared --with-rand-seed=none && \
-    AFL_USE_ASAN=0 CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
+    git clone --depth 1 --single-branch --branch v5.3.0-stable https://github.com/wolfSSL/wolfssl wolfssl-stateafl
+RUN cd ${WORKDIR}/wolfssl-stateafl && \
+    autoreconf --install && \
+    AFL_USE_ASAN=0 CFLAGS="-DWOLFSSL_GENSEED_FORTEST -DWC_RNG_SEED_CB -Wno-error=warnings -w -g -O0 -fno-omit-frame-pointer -DHAVE_EX_DATA -DWOLFSSL_CALLBACKS -g -fPIC" CC=afl-clang-fast ./configure "--disable-shared" "--enable-static" "--enable-debug" "--enable-opensslall" "--enable-opensslextra" "--enable-context-extra-user-data" "--enable-keygen" "--enable-certgen" "--enable-tls13" "--enable-dtls" "--enable-sp" "--enable-dtls-mtu" "--disable-sha3" "--enable-curve25519" "--enable-secure-renegotiation" "--enable-psk" "--enable-intelasm" "--enable-sp-asm" "--enable-aesni" "--enable-postauth" && \
+    AFL_USE_ASAN=0 make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu tls.dict ${WORKDIR}/tls.dict
 COPY --chown=ubuntu:ubuntu in-tls-replay ${WORKDIR}/in-tls-replay
@@ -37,6 +36,7 @@ COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
 #    git checkout 7e46ea4 && \
 #    cd src && \
 #    make
+
 #ENV LD_PRELOAD=$WORKDIR/libfaketime-asan-fixed/src/libfaketime.so.1
 #ENV FAKETIME="2000-01-01 11:12:13"
-#ENV FAKETIME_ONLY_CMDS="openssl"
+#ENV FAKETIME_ONLY_CMDS="server" TODO: server? client? wolfssl?
