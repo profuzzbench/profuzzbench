@@ -13,6 +13,12 @@ DELETE=$9
 
 WORKDIR="/home/ubuntu/experiments"
 
+#create save folder if it does not exist
+if [ ! -d "$SAVETO" ]; then
+  mkdir -p "$SAVETO"
+  echo "Created $SAVETO."
+fi
+
 #keep all container ids
 cids=()
 

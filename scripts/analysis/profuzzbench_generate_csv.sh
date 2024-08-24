@@ -8,7 +8,7 @@ append=$5      #append mode
 
 #create a new file if append = 0
 if [ $append = "0" ]; then
-  rm $covfile; touch $covfile
+  rm -f $covfile; touch $covfile
   echo "time,subject,fuzzer,run,cov_type,cov" >> $covfile
 fi
 
