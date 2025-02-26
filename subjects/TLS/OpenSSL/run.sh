@@ -24,6 +24,7 @@ if $(strstr $FUZZER "afl"); then
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR/${TARGET_DIR}
+  export AFL_NO_UI=1
   timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -x ${WORKDIR}/tls.dict -o $OUTDIR -N tcp://127.0.0.1/4433 $OPTIONS ./apps/openssl s_server -key key.pem -cert cert.pem -4 -naccept 1 -no_anti_replay
 
   STATUS=$?

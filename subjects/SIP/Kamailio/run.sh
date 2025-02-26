@@ -28,7 +28,7 @@ if $(strstr $FUZZER "afl"); then
   export KAMAILIO_RUNTIME_DIR="runtime_dir"
 
   cd $WORKDIR/${TARGET_DIR}
-
+  export AFL_NO_UI=1
   timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/5060 $OPTIONS -c ${WORKDIR}/run_pjsip ./src/kamailio -f ${WORKDIR}/kamailio-basic.cfg -L $KAMAILIO_MODULES -Y $KAMAILIO_RUNTIME_DIR -n 1 -D -E
 
   STATUS=$?
