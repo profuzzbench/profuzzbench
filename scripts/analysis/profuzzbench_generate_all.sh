@@ -28,7 +28,7 @@ echo "${FOLDERS[@]}" | while read RESULTDIR; do
 
     TARGET=$(echo $RESULTDIR | perl -n -l -e '/results-(.*)/; print $1;')
     FUZZERS=$(ls *.tar.gz | perl -n -l -e 'print $1 if /^out-.+-(\w+)_\d+\.tar\.gz/;'|sort|uniq)
-    REPS=$(ls *.tar.gz | perl -n -l -e 'print $1 if /^out-.+-\w+_(\d+)\.tar\.gz/;'|sort -r|head -1)
+    REPS=$(ls *.tar.gz | perl -n -l -e 'print $1 if /^out-.+-\w+_(\d+)\.tar\.gz/;'|sort -nr|head -1)
 
     echo "TARGET: $TARGET"
     echo "REPLICATIONS: $REPS"
